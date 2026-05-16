@@ -107,6 +107,93 @@
         </div>
     </div>
 
+    {{-- Month-over-Month + Forecast banner --}}
+    <div class="row g-3 mb-4">
+        <div class="col-xl-8">
+            <div class="nx-card h-100">
+                <div class="nx-card-header d-flex align-items-center justify-content-between">
+                    <span>
+                        <i class="fa-solid fa-arrows-left-right me-2" style="color:#a855f7"></i>
+                        Monthly Comparison &amp; Forecast / เปรียบเทียบรายเดือนและการพยากรณ์
+                    </span>
+                    <span class="nx-badge" style="background:rgba(168,85,247,0.15);color:#a855f7;">kWh</span>
+                </div>
+                <div class="nx-card-body p-0">
+                    <div id="chart-month-compare" style="height:240px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="nx-card h-100">
+                <div class="nx-card-header">
+                    <span><i class="fa-solid fa-chart-line me-2" style="color:#06b6d4"></i>Outlook / สรุปแนวโน้ม</span>
+                </div>
+                <div class="nx-card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted small">{{ __('menu.last_month') ?? 'Last month' }}</span>
+                        <span class="text-white fw-semibold">{{ number_format($lastMonthKwh, 0) }} kWh</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted small">{{ __('menu.this_month_so_far') ?? 'This month so far' }}</span>
+                        <span class="text-white fw-semibold">{{ number_format($monthKwh, 0) }} kWh</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted small">{{ __('menu.projected_this_month') ?? 'Projected (this month)' }}</span>
+                        <span class="text-white fw-semibold">{{ number_format($projectedThisMonth, 0) }} kWh</span>
+                    </div>
+                    <hr style="border-color:rgba(255,255,255,0.06);">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted small">{{ __('menu.vs_last_month') ?? 'vs Last month' }}</span>
+                        <span class="fw-semibold" style="color:{{ $vsLastMonth > 0 ? '#ef4444' : '#10b981' }};">
+                            <i class="fa-solid fa-{{ $vsLastMonth > 0 ? 'arrow-up' : 'arrow-down' }} me-1"></i>{{ number_format(abs($vsLastMonth), 1) }}%
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small"><i class="fa-solid fa-wand-magic-sparkles me-1" style="color:#a855f7;"></i>{{ __('menu.forecast_next_month') ?? 'Forecast next month' }}</span>
+                        <span class="fw-bold" style="color:#a855f7;">{{ number_format($forecastNextMonth, 0) }} kWh</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Top Consumers Row --}}
+    <div class="row g-3 mb-4">
+        <div class="col-xl-{{ $selectedBuilding ? 4 : 6 }}">
+            <div class="nx-card h-100">
+                <div class="nx-card-header">
+                    <span><i class="fa-solid fa-building me-2" style="color:#1d4ed8"></i>{{ __('menu.by_building') ?? 'Consumption by Building' }}</span>
+                </div>
+                <div class="nx-card-body p-0">
+                    <div id="chart-by-building" style="height:280px;"></div>
+                </div>
+            </div>
+        </div>
+        @if($selectedBuilding && !empty($byFloor))
+        <div class="col-xl-4">
+            <div class="nx-card h-100">
+                <div class="nx-card-header">
+                    <span><i class="fa-solid fa-layer-group me-2" style="color:#06b6d4"></i>{{ __('menu.by_floor') ?? 'By Floor' }} — {{ $selectedBuilding->name }}</span>
+                </div>
+                <div class="nx-card-body p-0">
+                    <div id="chart-by-floor" style="height:280px;"></div>
+                </div>
+            </div>
+        </div>
+        @endif
+        <div class="col-xl-{{ $selectedBuilding ? 4 : 6 }}">
+            <div class="nx-card h-100">
+                <div class="nx-card-header d-flex align-items-center justify-content-between">
+                    <span><i class="fa-solid fa-trophy me-2" style="color:#f59e0b"></i>{{ __('menu.top_consumers') ?? 'Top Consumers (by category)' }}</span>
+                    <span class="nx-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">{{ __('menu.this_month') ?? 'This month' }}</span>
+                </div>
+                <div class="nx-card-body p-0">
+                    <div id="chart-by-category" style="height:280px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Solar Production vs Consumption --}}
     <div class="row g-3 mb-4">
         <div class="col-12">
@@ -409,32 +496,159 @@
         },
         series: [{ name: 'kWh', data: hourlyKwh }],
         xaxis: {
+            type: 'category',
             categories: hourLabels,
+            tickAmount: 11,
+            tickPlacement: 'on',
             labels: {
                 style: { colors: '#8898aa', fontSize: '10px' },
                 rotate: -45,
-                formatter: (v, i) => (i % 3 === 0) ? v : ''
+                rotateAlways: true,
+                hideOverlappingLabels: false,
+                trim: false,
+                showDuplicates: false
             },
             axisBorder: { show: false },
-            axisTicks: { show: false }
+            axisTicks: { show: true, color: 'rgba(255,255,255,0.1)' }
         },
         yaxis: {
-            labels: { style: { colors: '#8898aa', fontSize: '11px' }, formatter: v => v.toFixed(1) }
+            labels: { style: { colors: '#8898aa', fontSize: '11px' }, formatter: v => v.toFixed(0) + ' kWh' }
         },
         colors: ['#06b6d4'],
         plotOptions: {
             bar: {
-                borderRadius: 4,
-                columnWidth: '70%',
-                dataLabels: { position: 'top' }
+                borderRadius: 3,
+                columnWidth: '75%'
             }
         },
         dataLabels: { enabled: false },
-        grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4 },
+        grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4, padding: { bottom: 10 } },
         tooltip: {
             theme: 'dark',
+            x: { formatter: (v, opts) => 'Hour ' + (opts.dataPointIndex !== undefined ? hourLabels[opts.dataPointIndex] : v) },
             y: { formatter: v => v.toFixed(2) + ' kWh' }
         }
+    }).render();
+
+    // === New analytical charts ===
+
+    // Monthly comparison + forecast
+    const monthCompare = @json($monthlyCompare);
+    const monthColors = ['#94a3b8', '#1d4ed8', '#06b6d4', '#a855f7'];
+    new ApexCharts(document.querySelector('#chart-month-compare'), {
+        chart: { type: 'bar', height: 240, background: 'transparent', toolbar: { show: false } },
+        series: [{ name: 'kWh', data: monthCompare.values }],
+        xaxis: {
+            categories: monthCompare.labels,
+            labels: { style: { colors: '#8898aa', fontSize: '11px' }, rotate: 0 },
+            axisBorder: { show: false },
+            axisTicks: { show: false }
+        },
+        yaxis: {
+            labels: { style: { colors: '#8898aa', fontSize: '11px' }, formatter: v => (v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0)) + ' kWh' }
+        },
+        plotOptions: {
+            bar: {
+                distributed: true,
+                borderRadius: 6,
+                columnWidth: '55%',
+                dataLabels: { position: 'top' }
+            }
+        },
+        colors: monthColors,
+        legend: { show: false },
+        dataLabels: {
+            enabled: true,
+            offsetY: -22,
+            style: { fontSize: '11px', colors: ['#e5e7eb'] },
+            formatter: v => v.toLocaleString()
+        },
+        grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4 },
+        tooltip: { theme: 'dark', y: { formatter: v => v.toLocaleString() + ' kWh' } }
+    }).render();
+
+    // Consumption by Building (horizontal bar)
+    const byBuilding = @json($byBuilding);
+    new ApexCharts(document.querySelector('#chart-by-building'), {
+        chart: { type: 'bar', height: 280, background: 'transparent', toolbar: { show: false } },
+        series: [{ name: 'kWh', data: byBuilding.map(b => b.kwh) }],
+        xaxis: {
+            categories: byBuilding.map(b => b.name),
+            labels: { style: { colors: '#8898aa', fontSize: '11px' }, formatter: v => (v >= 1000 ? (v/1000).toFixed(1)+'k' : v) }
+        },
+        yaxis: {
+            labels: { style: { colors: '#e5e7eb', fontSize: '12px' } }
+        },
+        plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '65%', distributed: true } },
+        colors: ['#1d4ed8', '#3b82f6', '#06b6d4', '#0ea5e9', '#10b981', '#a855f7'],
+        legend: { show: false },
+        dataLabels: {
+            enabled: true,
+            textAnchor: 'start',
+            offsetX: 6,
+            style: { fontSize: '11px', colors: ['#fff'] },
+            formatter: (v, opts) => v.toLocaleString() + ' kWh (' + byBuilding[opts.dataPointIndex].pct + '%)'
+        },
+        grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4 },
+        tooltip: { theme: 'dark', y: { formatter: v => v.toLocaleString() + ' kWh' } }
+    }).render();
+
+    // By Floor (when building selected)
+    @if($selectedBuilding && !empty($byFloor))
+    const byFloor = @json($byFloor);
+    new ApexCharts(document.querySelector('#chart-by-floor'), {
+        chart: { type: 'bar', height: 280, background: 'transparent', toolbar: { show: false } },
+        series: [{ name: 'kWh', data: byFloor.map(f => f.kwh) }],
+        xaxis: {
+            categories: byFloor.map(f => f.name),
+            labels: { style: { colors: '#8898aa', fontSize: '10px' }, rotate: -35 },
+            axisBorder: { show: false }, axisTicks: { show: false }
+        },
+        yaxis: { labels: { style: { colors: '#8898aa', fontSize: '11px' }, formatter: v => v.toFixed(0) } },
+        plotOptions: { bar: { borderRadius: 3, columnWidth: '60%', distributed: true } },
+        colors: ['#06b6d4','#0ea5e9','#3b82f6','#6366f1','#8b5cf6','#a855f7','#ec4899','#f43f5e','#f59e0b','#10b981','#22c55e','#84cc16'],
+        legend: { show: false },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4 },
+        tooltip: { theme: 'dark', y: { formatter: v => v.toLocaleString() + ' kWh' } }
+    }).render();
+    @endif
+
+    // Top Consumers by Category (donut)
+    const byCategory = @json($byCategory);
+    new ApexCharts(document.querySelector('#chart-by-category'), {
+        chart: { type: 'donut', height: 280, background: 'transparent' },
+        series: byCategory.map(c => c.kwh),
+        labels: byCategory.map(c => c.name),
+        colors: byCategory.map(c => c.color || '#6b7280'),
+        legend: {
+            position: 'right',
+            fontSize: '12px',
+            labels: { colors: '#cbd5e1' },
+            markers: { width: 9, height: 9 },
+            itemMargin: { vertical: 3 },
+            formatter: function(seriesName, opts) {
+                const v = opts.w.globals.series[opts.seriesIndex];
+                return seriesName + '  <span style="color:#94a3b8">' + v.toLocaleString() + ' kWh</span>';
+            }
+        },
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '60%',
+                    labels: {
+                        show: true,
+                        name: { color: '#cbd5e1', fontSize: '12px' },
+                        value: { color: '#fff', fontSize: '20px', fontWeight: 700, formatter: v => Number(v).toLocaleString() + ' kWh' },
+                        total: { show: true, label: 'Total', color: '#94a3b8', fontSize: '11px',
+                            formatter: w => w.globals.seriesTotals.reduce((a,b)=>a+b,0).toLocaleString() + ' kWh' }
+                    }
+                }
+            }
+        },
+        dataLabels: { enabled: false },
+        stroke: { width: 2, colors: ['#0d1b34'] },
+        tooltip: { theme: 'dark', y: { formatter: v => v.toLocaleString() + ' kWh' } }
     }).render();
 })();
 </script>
