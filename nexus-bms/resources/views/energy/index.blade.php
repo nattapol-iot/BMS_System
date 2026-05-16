@@ -191,7 +191,7 @@
                     <span class="nx-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">{{ __('menu.this_month') ?? 'This month' }}</span>
                 </div>
                 <div class="nx-card-body p-0">
-                    <div id="chart-by-category" style="height:280px;"></div>
+                    <div id="chart-by-category" style="height:340px;"></div>
                 </div>
             </div>
         </div>
@@ -662,41 +662,100 @@
     }).render();
     @endif
 
-    // Top Consumers by Category (donut)
+    // Top Consumers by Category (donut) — premium look
     const byCategory = @json($byCategory);
+    const categoryTotal = byCategory.reduce((s, c) => s + Number(c.kwh || 0), 0);
+    // Harmonised vibrant palette overriding DB colors for a cleaner look
+    const palette = ['#3b82f6','#06b6d4','#f59e0b','#8b5cf6','#10b981','#ef4444','#ec4899','#84cc16','#0ea5e9','#a855f7','#f97316','#22d3ee'];
+
     new ApexCharts(document.querySelector('#chart-by-category'), {
-        chart: { type: 'donut', height: 280, background: 'transparent' },
-        series: byCategory.map(c => c.kwh),
+        chart: {
+            type: 'donut',
+            height: 320,
+            background: 'transparent',
+            dropShadow: { enabled: true, top: 4, blur: 8, opacity: 0.15, color: '#000' }
+        },
+        series: byCategory.map(c => Number(c.kwh)),
         labels: byCategory.map(c => c.name),
-        colors: byCategory.map(c => c.color || '#6b7280'),
+        colors: byCategory.map((c, i) => palette[i % palette.length]),
         legend: {
             position: 'right',
             fontSize: '12px',
-            labels: { colors: '#cbd5e1' },
-            markers: { width: 9, height: 9 },
-            itemMargin: { vertical: 3 },
+            fontWeight: 500,
+            labels: { colors: '#e5e7eb', useSeriesColors: false },
+            markers: { width: 12, height: 12, radius: 3 },
+            itemMargin: { horizontal: 6, vertical: 4 },
             formatter: function(seriesName, opts) {
                 const v = opts.w.globals.series[opts.seriesIndex];
-                return seriesName + '  <span style="color:#94a3b8">' + v.toLocaleString() + ' kWh</span>';
+                const pct = categoryTotal > 0 ? (v / categoryTotal * 100).toFixed(1) : '0';
+                return '<span style="font-weight:600;color:#fff">' + seriesName + '</span>' +
+                       '<br><span style="color:#94a3b8;font-size:11px">' + Math.round(v).toLocaleString() + ' kWh · ' + pct + '%</span>';
             }
         },
         plotOptions: {
             pie: {
+                expandOnClick: true,
                 donut: {
-                    size: '60%',
+                    size: '72%',
+                    background: 'transparent',
                     labels: {
                         show: true,
-                        name: { color: '#cbd5e1', fontSize: '12px' },
-                        value: { color: '#fff', fontSize: '20px', fontWeight: 700, formatter: v => Number(v).toLocaleString() + ' kWh' },
-                        total: { show: true, label: 'Total', color: '#94a3b8', fontSize: '11px',
-                            formatter: w => w.globals.seriesTotals.reduce((a,b)=>a+b,0).toLocaleString() + ' kWh' }
+                        name: {
+                            show: true,
+                            offsetY: -10,
+                            color: '#94a3b8',
+                            fontSize: '11px',
+                            fontWeight: 500
+                        },
+                        value: {
+                            show: true,
+                            offsetY: 8,
+                            color: '#ffffff',
+                            fontSize: '24px',
+                            fontWeight: 700,
+                            formatter: v => {
+                                const n = Number(v);
+                                return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : Math.round(n).toLocaleString();
+                            }
+                        },
+                        total: {
+                            show: true,
+                            showAlways: true,
+                            label: 'Total kWh',
+                            color: '#94a3b8',
+                            fontSize: '11px',
+                            fontWeight: 500,
+                            formatter: function() {
+                                return categoryTotal >= 1000 ? (categoryTotal / 1000).toFixed(1) + 'k' : Math.round(categoryTotal).toLocaleString();
+                            }
+                        }
                     }
                 }
             }
         },
         dataLabels: { enabled: false },
-        stroke: { width: 2, colors: ['#0d1b34'] },
-        tooltip: { theme: 'dark', y: { formatter: v => v.toLocaleString() + ' kWh' } }
+        stroke: { show: true, width: 3, colors: ['#0f1e3a'] },
+        states: {
+            hover: { filter: { type: 'lighten', value: 0.08 } },
+            active: { filter: { type: 'darken', value: 0.1 } }
+        },
+        tooltip: {
+            theme: 'dark',
+            fillSeriesColor: false,
+            y: {
+                formatter: function(v, opts) {
+                    const pct = categoryTotal > 0 ? (v / categoryTotal * 100).toFixed(1) : '0';
+                    return Math.round(v).toLocaleString() + ' kWh  (' + pct + '%)';
+                }
+            }
+        },
+        responsive: [{
+            breakpoint: 1400,
+            options: {
+                legend: { position: 'bottom', horizontalAlign: 'center' },
+                chart: { height: 360 }
+            }
+        }]
     }).render();
 })();
 </script>
