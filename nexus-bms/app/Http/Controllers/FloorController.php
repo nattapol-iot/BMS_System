@@ -3,10 +3,30 @@ namespace App\Http\Controllers;
 
 use App\Models\Floor;
 use App\Models\Building;
+use App\Models\Equipment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FloorController extends Controller
 {
+    public function updatePositions(Request $request, Floor $floor)
+    {
+        $data = $request->validate([
+            'positions' => 'required|array',
+            'positions.*.id' => 'required|integer|exists:equipment,id',
+            'positions.*.x' => 'required|numeric|min:0|max:800',
+            'positions.*.y' => 'required|numeric|min:0|max:500',
+        ]);
+        DB::transaction(function () use ($data, $floor) {
+            foreach ($data['positions'] as $pos) {
+                Equipment::where('id', $pos['id'])
+                    ->where('floor_id', $floor->id)
+                    ->update(['x_position' => $pos['x'], 'y_position' => $pos['y']]);
+            }
+        });
+        return response()->json(['success' => true, 'updated' => count($data['positions'])]);
+    }
+
     public function index(Request $request)
     {
         $buildings = Building::where('status', 'active')->get();

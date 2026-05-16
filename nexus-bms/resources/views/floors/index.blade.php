@@ -45,10 +45,16 @@
                     <div class="nx-card-title"><i class="fa-solid fa-map" style="color:var(--primary);margin-right:8px;"></i>{{ $selectedBuilding->name }} — Floor {{ $selectedFloor->floor_number }}</div>
                     <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">{{ $selectedFloor->name_th ?? $selectedFloor->name }} · {{ $selectedFloor->area ? number_format($selectedFloor->area).' m²' : '' }}</div>
                 </div>
-                <div class="d-flex gap-2">
-                    <button class="nx-btn nx-btn-outline nx-btn-sm" onclick="zoomIn()"><i class="fa-solid fa-plus"></i></button>
-                    <button class="nx-btn nx-btn-outline nx-btn-sm" onclick="zoomOut()"><i class="fa-solid fa-minus"></i></button>
-                    <button class="nx-btn nx-btn-outline nx-btn-sm" onclick="resetZoom()"><i class="fa-solid fa-arrows-to-circle"></i></button>
+                <div class="d-flex gap-2 align-items-center">
+                    <button class="nx-btn nx-btn-outline nx-btn-sm" onclick="zoomIn()" type="button"><i class="fa-solid fa-plus"></i></button>
+                    <button class="nx-btn nx-btn-outline nx-btn-sm" onclick="zoomOut()" type="button"><i class="fa-solid fa-minus"></i></button>
+                    <button class="nx-btn nx-btn-outline nx-btn-sm" onclick="resetZoom()" type="button"><i class="fa-solid fa-arrows-to-circle"></i></button>
+                    @if(auth()->user()?->hasPermission('floors', 'edit'))
+                    <span class="text-muted small ms-2">|</span>
+                    <button id="editModeBtn" class="nx-btn nx-btn-outline nx-btn-sm" onclick="toggleEditMode()" type="button"><i class="fa-solid fa-pen-to-square"></i> Edit Positions</button>
+                    <button id="savePosBtn" class="nx-btn nx-btn-primary nx-btn-sm" onclick="savePositions()" type="button" style="display:none;"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+                    <span id="posStatus" class="text-muted small ms-2"></span>
+                    @endif
                 </div>
             </div>
             <div class="nx-card-body" style="padding:0;overflow:hidden;border-radius:0 0 12px 12px;">
@@ -178,6 +184,25 @@
                             <g id="equipTooltip" style="display:none;">
                                 <rect id="tooltipBg" rx="6" fill="#1e293b" opacity="0.95"/>
                                 <text id="tooltipText" fill="white" font-size="11" font-family="Inter,sans-serif"/>
+                            </g>
+
+                            <!-- Real Equipment from DB (positioned via x_position/y_position) -->
+                            <g id="dbEquipment">
+                                @php
+                                    $catColors = ['HVAC'=>'#3b82f6','Fire Alarm'=>'#ef4444','Lighting'=>'#f59e0b','Access Control'=>'#22c55e','Sensors'=>'#8b5cf6','Pumps'=>'#06b6d4','Chillers'=>'#0ea5e9','Power'=>'#eab308','Security'=>'#10b981','Elevators'=>'#a855f7'];
+                                    $defaultX = 100; $defaultY = 100;
+                                @endphp
+                                @foreach($selectedFloor->equipment as $i => $eq)
+                                    @php
+                                        $x = $eq->x_position ?? (80 + ($i % 8) * 90);
+                                        $y = $eq->y_position ?? (60 + intdiv($i, 8) * 80);
+                                        $color = $catColors[$eq->category?->name ?? ''] ?? ($eq->category?->color ?? '#64748b');
+                                    @endphp
+                                    <g class="db-equip" data-id="{{ $eq->id }}" data-name="{{ $eq->code }}" data-fullname="{{ $eq->name }}" data-category="{{ $eq->category?->name }}" data-status="{{ $eq->status }}" data-health="{{ $eq->health_score }}" transform="translate({{ $x }}, {{ $y }})" style="cursor:pointer;">
+                                        <circle r="11" fill="{{ $color }}" stroke="white" stroke-width="2.5" class="equip-dot" style="filter:drop-shadow(0 2px 4px rgba(15,23,42,0.25));"/>
+                                        <text text-anchor="middle" y="4" font-size="8" fill="white" font-weight="700" font-family="Inter,sans-serif" class="equip-label">{{ strtoupper(substr($eq->category?->name ?? 'E', 0, 1)) }}</text>
+                                    </g>
+                                @endforeach
                             </g>
                         </svg>
                     </div>
@@ -333,5 +358,122 @@ document.querySelectorAll('.floor-room').forEach(room => {
     room.addEventListener('mouseenter', function() { this.style.opacity = '0.85'; });
     room.addEventListener('mouseleave', function() { this.style.opacity = '1'; });
 });
+
+// DB equipment click handler — show details
+document.querySelectorAll('.db-equip').forEach(g => {
+    g.addEventListener('click', function(ev) {
+        if (editMode) return;
+        ev.stopPropagation();
+        const card = document.getElementById('equipDetailCard');
+        const title = document.getElementById('equipDetailTitle');
+        const body = document.getElementById('equipDetailBody');
+        card.style.display = '';
+        title.textContent = this.dataset.fullname || this.dataset.name;
+        body.innerHTML = `
+            <div class="detail-row"><span class="detail-key">Code</span><span class="detail-val">${this.dataset.name}</span></div>
+            <div class="detail-row"><span class="detail-key">Category</span><span class="detail-val">${this.dataset.category || '-'}</span></div>
+            <div class="detail-row"><span class="detail-key">Status</span><span><span class="nx-badge badge-success">${this.dataset.status}</span></span></div>
+            <div class="detail-row"><span class="detail-key">Health</span><span class="detail-val">${this.dataset.health}%</span></div>
+        `;
+    });
+});
+
+// === FLOOR PLAN EDITOR — drag/drop equipment positions ===
+let editMode = false;
+const floorSvg = document.getElementById('floorSvg');
+@if(isset($selectedFloor))
+const FLOOR_ID = {{ $selectedFloor->id }};
+const POS_UPDATE_URL = "{{ route('floors.update-positions', $selectedFloor->id) }}";
+const CSRF = '{{ csrf_token() }}';
+@endif
+
+function toggleEditMode() {
+    editMode = !editMode;
+    const btn = document.getElementById('editModeBtn');
+    const save = document.getElementById('savePosBtn');
+    if (editMode) {
+        btn.classList.remove('nx-btn-outline');
+        btn.classList.add('nx-btn-primary');
+        btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Cancel';
+        save.style.display = '';
+        document.getElementById('floorPlanContainer').style.cursor = 'default';
+        document.querySelectorAll('.db-equip').forEach(g => g.style.cursor = 'move');
+    } else {
+        btn.classList.add('nx-btn-outline');
+        btn.classList.remove('nx-btn-primary');
+        btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Positions';
+        save.style.display = 'none';
+        document.getElementById('floorPlanContainer').style.cursor = 'grab';
+        document.querySelectorAll('.db-equip').forEach(g => g.style.cursor = 'pointer');
+    }
+}
+
+let dragTarget = null, dragOffset = {x:0, y:0};
+const dirtyEquipment = new Map(); // id → {x, y}
+
+function getSvgPoint(evt) {
+    if (!floorSvg) return {x:0, y:0};
+    const pt = floorSvg.createSVGPoint();
+    pt.x = evt.clientX;
+    pt.y = evt.clientY;
+    return pt.matrixTransform(floorSvg.getScreenCTM().inverse());
+}
+
+document.querySelectorAll('.db-equip').forEach(g => {
+    g.addEventListener('mousedown', function(ev) {
+        if (!editMode) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        dragTarget = this;
+        const t = this.transform.baseVal.consolidate();
+        const m = t ? t.matrix : null;
+        const cur = m ? {x: m.e, y: m.f} : {x:0, y:0};
+        const p = getSvgPoint(ev);
+        dragOffset = {x: p.x - cur.x, y: p.y - cur.y};
+        this.querySelector('circle').setAttribute('stroke', '#facc15');
+        this.querySelector('circle').setAttribute('stroke-width', '3.5');
+    });
+});
+
+document.addEventListener('mousemove', function(ev) {
+    if (!editMode || !dragTarget) return;
+    const p = getSvgPoint(ev);
+    const nx = Math.max(0, Math.min(800, p.x - dragOffset.x));
+    const ny = Math.max(0, Math.min(500, p.y - dragOffset.y));
+    dragTarget.setAttribute('transform', `translate(${nx}, ${ny})`);
+    dirtyEquipment.set(parseInt(dragTarget.dataset.id), {x: Math.round(nx*100)/100, y: Math.round(ny*100)/100});
+    document.getElementById('posStatus').textContent = `${dirtyEquipment.size} unsaved change(s)`;
+});
+
+document.addEventListener('mouseup', function(ev) {
+    if (dragTarget) {
+        dragTarget.querySelector('circle').setAttribute('stroke', 'white');
+        dragTarget.querySelector('circle').setAttribute('stroke-width', '2.5');
+        dragTarget = null;
+    }
+});
+
+function savePositions() {
+    if (dirtyEquipment.size === 0) {
+        document.getElementById('posStatus').textContent = 'Nothing to save.';
+        return;
+    }
+    const positions = Array.from(dirtyEquipment.entries()).map(([id, p]) => ({id, x: p.x, y: p.y}));
+    fetch(POS_UPDATE_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json'},
+        body: JSON.stringify({positions})
+    }).then(r => r.json()).then(res => {
+        if (res.success) {
+            document.getElementById('posStatus').textContent = `Saved ${res.updated} position(s).`;
+            dirtyEquipment.clear();
+            setTimeout(() => document.getElementById('posStatus').textContent = '', 3000);
+        } else {
+            document.getElementById('posStatus').textContent = 'Save failed.';
+        }
+    }).catch(err => {
+        document.getElementById('posStatus').textContent = 'Error: ' + err.message;
+    });
+}
 </script>
 @endsection

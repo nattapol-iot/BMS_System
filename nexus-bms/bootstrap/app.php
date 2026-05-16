@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\LogActivity::class,
         ]);
+        $middleware->alias([
+            'can.permission' => \App\Http\Middleware\CheckPermission::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

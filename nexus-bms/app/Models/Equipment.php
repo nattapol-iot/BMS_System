@@ -12,7 +12,7 @@ class Equipment extends Model
         'code','name','name_th','building_id','floor_id','room_id','category_id',
         'manufacturer','model_number','serial_number','installation_date','warranty_expiry',
         'status','health_score','runtime_hours','ip_address','mac_address',
-        'protocol','last_communication','notes'
+        'protocol','last_communication','notes','x_position','y_position'
     ];
 
     protected $casts = ['installation_date'=>'date','warranty_expiry'=>'date','last_communication'=>'datetime'];

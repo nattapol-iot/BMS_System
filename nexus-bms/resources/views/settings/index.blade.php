@@ -438,6 +438,36 @@
                             </button>
                         </div>
                     </form>
+
+                    {{-- Backup Files List --}}
+                    <div class="mt-4 pt-3 border-top" style="border-color:rgba(255,255,255,0.06)!important;">
+                        <h6 class="text-white mb-3"><i class="fa-solid fa-archive me-2" style="color:#06b6d4"></i>Backup Files ({{ count($backups ?? []) }})</h6>
+                        @if(empty($backups))
+                            <p class="text-muted small mb-0">No backup files yet. Click "Run Backup Now" to create one.</p>
+                        @else
+                            <div class="table-responsive">
+                                <table class="table table-sm nx-table mb-0">
+                                    <thead><tr><th>Filename</th><th style="width:120px;">Size</th><th style="width:170px;">Created</th><th style="width:140px;text-align:right;">Actions</th></tr></thead>
+                                    <tbody>
+                                    @foreach($backups as $b)
+                                        <tr>
+                                            <td class="text-white"><i class="fa-solid fa-file-zipper me-2 text-muted"></i>{{ $b['name'] }}</td>
+                                            <td class="text-muted small">{{ $b['size'] < 1024 ? $b['size'].' B' : ($b['size'] < 1048576 ? round($b['size']/1024,1).' KB' : round($b['size']/1048576,1).' MB') }}</td>
+                                            <td class="text-muted small">{{ \Carbon\Carbon::createFromTimestamp($b['time'])->format('Y-m-d H:i:s') }}</td>
+                                            <td style="text-align:right;">
+                                                <a href="{{ route('settings.backup-download', $b['name']) }}" class="nx-btn nx-btn-outline nx-btn-sm" title="Download"><i class="fa-solid fa-download"></i></a>
+                                                <form action="{{ route('settings.backup-destroy', $b['name']) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this backup?');">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="nx-btn nx-btn-sm" style="background:var(--nx-red);color:#fff;" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

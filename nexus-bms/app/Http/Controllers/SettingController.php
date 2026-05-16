@@ -2,25 +2,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\SystemSetting;
+use App\Http\Controllers\BackupController;
 use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
     public function index()
     {
-        $settings = SystemSetting::all()->groupBy('group');
-        return view('settings.index', compact('settings'));
+        $settings = SystemSetting::all()->pluck('value', 'key')->all();
+        $backups = BackupController::listBackups();
+        return view('settings.index', compact('settings', 'backups'));
     }
 
     public function update(Request $request)
     {
-        $data = $request->validate([
-            'settings' => 'required|array',
-        ]);
-
-        foreach ($data['settings'] as $key => $value) {
-            $group = $request->input("groups.{$key}", 'general');
-            SystemSetting::set($key, $value, $group);
+        // Accept all submitted fields (each tab posts a subset)
+        $exclude = ['_token', '_method', 'tab'];
+        foreach ($request->all() as $key => $value) {
+            if (in_array($key, $exclude, true)) continue;
+            SystemSetting::set($key, is_array($value) ? json_encode($value) : (string) $value);
         }
 
         return redirect()->route('settings.index')->with('success','Settings saved successfully.');
