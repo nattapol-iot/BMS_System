@@ -137,20 +137,7 @@ class EnergyController extends Controller
             ->sum('value') / 14;
         $forecastNextMonth = round($last14DayAvg * Carbon::now()->addMonthNoOverflow()->daysInMonth, 1);
 
-        $monthlyCompare = [
-            'labels' => [
-                $lastMonthStart->format('M Y'),
-                Carbon::now()->format('M Y') . ' (so far)',
-                Carbon::now()->format('M Y') . ' (projected)',
-                Carbon::now()->addMonthNoOverflow()->format('M Y') . ' (forecast)',
-            ],
-            'values' => [
-                round($lastMonthKwh, 1),
-                round($monthKwh, 1),
-                round($projectedThisMonth, 1),
-                $forecastNextMonth,
-            ],
-        ];
+        $monthlyCompare = $this->buildYearlyCompare($elecMeterIds, $monthKwh, $projectedThisMonth, $last14DayAvg);
 
         $vsLastMonth = $lastMonthKwh > 0
             ? round(($monthKwh - $lastMonthKwh) / $lastMonthKwh * 100, 1)
@@ -188,6 +175,49 @@ class EnergyController extends Controller
             'byBuilding', 'byFloor', 'byCategory',
             'monthlyCompare', 'lastMonthKwh', 'vsLastMonth', 'forecastNextMonth', 'projectedThisMonth'
         ));
+    }
+
+    private function buildYearlyCompare($meterIds, float $thisMonthSoFar, float $projectedThisMonth, float $dailyAvg): array
+    {
+        $now = Carbon::now();
+        $year = $now->year;
+        $currentMonth = $now->month;
+
+        $labels = [];
+        $actual = [];
+        $forecast = [];
+
+        for ($m = 1; $m <= 12; $m++) {
+            $start = Carbon::create($year, $m, 1)->startOfMonth();
+            $end = $start->copy()->endOfMonth();
+            $labels[] = $start->format('M');
+
+            if ($m < $currentMonth) {
+                // Past month — actual only
+                $kwh = (float) EnergyLog::whereIn('meter_id', $meterIds)
+                    ->whereBetween('logged_at', [$start, $end])
+                    ->sum('value');
+                $actual[] = round($kwh, 1);
+                $forecast[] = 0;
+            } elseif ($m === $currentMonth) {
+                // Current month — actual so far + forecast for remainder
+                $actual[] = round($thisMonthSoFar, 1);
+                $remainder = max($projectedThisMonth - $thisMonthSoFar, 0);
+                $forecast[] = round($remainder, 1);
+            } else {
+                // Future month — forecast only (daily avg × days in that month)
+                $actual[] = 0;
+                $forecast[] = round($dailyAvg * $end->day, 1);
+            }
+        }
+
+        return [
+            'labels' => $labels,
+            'actual' => $actual,
+            'forecast' => $forecast,
+            'year' => $year,
+            'currentMonthIndex' => $currentMonth - 1,
+        ];
     }
 
     private function getTrendData($meterIds, $startDate, $endDate): array

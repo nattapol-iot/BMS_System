@@ -114,12 +114,15 @@
                 <div class="nx-card-header d-flex align-items-center justify-content-between">
                     <span>
                         <i class="fa-solid fa-arrows-left-right me-2" style="color:#a855f7"></i>
-                        Monthly Comparison &amp; Forecast / เปรียบเทียบรายเดือนและการพยากรณ์
+                        Monthly Comparison &amp; Forecast / เปรียบเทียบรายเดือนและการพยากรณ์ — {{ now()->year }}
                     </span>
-                    <span class="nx-badge" style="background:rgba(168,85,247,0.15);color:#a855f7;">kWh</span>
+                    <span class="d-flex align-items-center gap-3 small">
+                        <span class="d-flex align-items-center gap-1"><span style="width:10px;height:10px;border-radius:2px;background:#1d4ed8;display:inline-block;"></span><span class="text-muted">Actual</span></span>
+                        <span class="d-flex align-items-center gap-1"><span style="width:10px;height:10px;border-radius:2px;background:#a855f7;display:inline-block;opacity:.7;"></span><span class="text-muted">Forecast</span></span>
+                    </span>
                 </div>
                 <div class="nx-card-body p-0">
-                    <div id="chart-month-compare" style="height:240px;"></div>
+                    <div id="chart-month-compare" style="height:280px;"></div>
                 </div>
             </div>
         </div>
@@ -532,12 +535,20 @@
 
     // === New analytical charts ===
 
-    // Monthly comparison + forecast
+    // Monthly comparison + forecast — 12 months, stacked Actual+Forecast
     const monthCompare = @json($monthlyCompare);
-    const monthColors = ['#94a3b8', '#1d4ed8', '#06b6d4', '#a855f7'];
     new ApexCharts(document.querySelector('#chart-month-compare'), {
-        chart: { type: 'bar', height: 240, background: 'transparent', toolbar: { show: false } },
-        series: [{ name: 'kWh', data: monthCompare.values }],
+        chart: {
+            type: 'bar',
+            height: 280,
+            background: 'transparent',
+            toolbar: { show: false },
+            stacked: true
+        },
+        series: [
+            { name: 'Actual', data: monthCompare.actual },
+            { name: 'Forecast', data: monthCompare.forecast }
+        ],
         xaxis: {
             categories: monthCompare.labels,
             labels: { style: { colors: '#8898aa', fontSize: '11px' }, rotate: 0 },
@@ -545,26 +556,63 @@
             axisTicks: { show: false }
         },
         yaxis: {
-            labels: { style: { colors: '#8898aa', fontSize: '11px' }, formatter: v => (v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0)) + ' kWh' }
+            labels: { style: { colors: '#8898aa', fontSize: '11px' }, formatter: v => (v >= 1000 ? (v/1000).toFixed(0)+'k' : v.toFixed(0)) + ' kWh' }
         },
         plotOptions: {
             bar: {
-                distributed: true,
-                borderRadius: 6,
-                columnWidth: '55%',
-                dataLabels: { position: 'top' }
+                borderRadius: 4,
+                borderRadiusApplication: 'end',
+                columnWidth: '60%'
             }
         },
-        colors: monthColors,
-        legend: { show: false },
+        colors: ['#1d4ed8', '#a855f7'],
+        fill: {
+            type: 'solid',
+            opacity: [1, 0.65]
+        },
+        stroke: {
+            width: 1,
+            colors: ['transparent']
+        },
+        legend: {
+            show: true,
+            position: 'top',
+            horizontalAlign: 'right',
+            labels: { colors: '#cbd5e1' },
+            markers: { width: 10, height: 10 },
+            fontSize: '12px'
+        },
         dataLabels: {
             enabled: true,
-            offsetY: -22,
-            style: { fontSize: '11px', colors: ['#e5e7eb'] },
-            formatter: v => v.toLocaleString()
+            formatter: function (val, opts) {
+                if (val < 1) return '';
+                const total = opts.w.globals.stackedSeriesTotals[opts.dataPointIndex];
+                // Only label the top of the stack on the last series
+                if (opts.seriesIndex !== opts.w.globals.series.length - 1) return '';
+                return total >= 1000 ? (total / 1000).toFixed(0) + 'k' : total.toFixed(0);
+            },
+            offsetY: -16,
+            style: { fontSize: '10px', colors: ['#cbd5e1'] },
+            background: { enabled: false }
         },
         grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4 },
-        tooltip: { theme: 'dark', y: { formatter: v => v.toLocaleString() + ' kWh' } }
+        annotations: {
+            xaxis: [{
+                x: monthCompare.labels[monthCompare.currentMonthIndex],
+                strokeDashArray: 3,
+                borderColor: '#06b6d4',
+                label: {
+                    text: 'Now',
+                    style: { background: '#06b6d4', color: '#fff', fontSize: '10px' }
+                }
+            }]
+        },
+        tooltip: {
+            theme: 'dark',
+            shared: true,
+            intersect: false,
+            y: { formatter: v => v.toLocaleString() + ' kWh' }
+        }
     }).render();
 
     // Consumption by Building (horizontal bar)
