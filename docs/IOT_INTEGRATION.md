@@ -120,6 +120,34 @@ For no-code integration (drag-and-drop flows), use the Node-RED flow at
 
 ---
 
+## Simulating Devices (no hardware needed)
+
+For testing without real devices, use the built-in artisan simulator. It pushes
+realistic readings to the local API the same way a real gateway would.
+
+```bash
+# Push 1 cycle of readings to every active equipment + meter, then exit
+php artisan iot:simulate --count=1
+
+# Continuous: every 10s, forever (Ctrl+C to stop)
+php artisan iot:simulate --interval=10
+
+# Only specific devices
+php artisan iot:simulate --equipment=AHU-07 --equipment=CHILLER-01 --meters="Nexus Tower A Electricity"
+
+# Trigger a critical alarm (one-shot)
+php artisan iot:simulate --offline=AHU-07
+
+# Dry-run: print what would be sent, don't POST
+php artisan iot:simulate --dry-run --count=1
+```
+
+The simulator uses a realistic 24-hour load curve (peak ~14:00, trough ~03:00)
+and a probabilistic equipment status mix (95% active, 3.5% maintenance,
+1% inactive, 0.5% offline) — so leaving it running overnight produces
+believable trend data and the occasional alarm. To override the target URL or
+token, pass `--url=` / `--token=` or set `APP_URL` / `IOT_API_TOKEN`.
+
 ## Provisioning Devices in Nexus
 
 Before a gateway can push data, the equipment/meter must exist in the database
