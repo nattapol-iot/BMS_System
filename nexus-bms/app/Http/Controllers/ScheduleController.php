@@ -19,7 +19,7 @@ class ScheduleController extends Controller
             ->where(fn($q)=>$q->whereNull('turn_off_time')->orWhere('turn_off_time','>=',now()->format('H:i:s')))
             ->count();
 
-        $schedules = Schedule::with(['building','equipment'])->orderByDesc('updated_at')->get();
+        $schedules = Schedule::with(['building','equipment'])->orderByDesc('updated_at')->paginate(15);
         $todaySchedules = Schedule::with(['building','equipment'])
             ->where('status','active')
             ->whereJsonContains('repeat_days', strtolower(Carbon::today()->format('D')))
@@ -41,12 +41,28 @@ class ScheduleController extends Controller
         return view('schedules.calendar', compact('schedules','month','year','buildings'));
     }
 
-    public function deviceSettings()
+    public function deviceSettings(Request $request)
     {
         $buildings = Building::where('status','active')->get();
         $categories = EquipmentCategory::all();
-        $schedules = Schedule::with(['building','floor','equipment'])->orderByDesc('created_at')->paginate(10);
-        return view('schedules.device-settings', compact('buildings','categories','schedules'));
+        $schedules = Schedule::with(['building','equipment'])->orderByDesc('updated_at')->get();
+
+        $selectedSchedule = $request->filled('schedule_id')
+            ? Schedule::with(['equipment.category','equipment.building','equipment.floor'])->find($request->schedule_id)
+            : null;
+
+        $devices = $selectedSchedule
+            ? $selectedSchedule->equipment()->with(['category','building','floor'])->get()
+            : collect();
+
+        return view('schedules.device-settings', compact('buildings','categories','schedules','selectedSchedule','devices'));
+    }
+
+    public function create()
+    {
+        $buildings = Building::where('status','active')->get();
+        $equipment = Equipment::with(['category','building'])->orderBy('name')->get();
+        return view('schedules.create', compact('buildings','equipment'));
     }
 
     public function store(Request $request)
@@ -68,13 +84,56 @@ class ScheduleController extends Controller
 
         $data['created_by'] = auth()->id();
         $data['repeat_days'] = $request->input('repeat_days', []);
+        $equipmentIds = $data['equipment_ids'] ?? [];
+        unset($data['equipment_ids']);
 
         $schedule = Schedule::create($data);
-        if ($request->filled('equipment_ids')) {
-            $schedule->equipment()->sync($request->equipment_ids);
+        if (!empty($equipmentIds)) {
+            $schedule->equipment()->sync($equipmentIds);
         }
 
-        return redirect()->route('schedules.device-settings')->with('success','Schedule saved successfully.');
+        return redirect()->route('schedules.index')->with('success','Schedule created successfully.');
+    }
+
+    public function edit(Schedule $schedule)
+    {
+        $buildings = Building::where('status','active')->get();
+        $equipment = Equipment::with(['category','building'])->orderBy('name')->get();
+        $schedule->load('equipment');
+        return view('schedules.edit', compact('schedule','buildings','equipment'));
+    }
+
+    public function update(Request $request, Schedule $schedule)
+    {
+        $data = $request->validate([
+            'name' => 'required|max:255',
+            'building_id' => 'nullable|exists:buildings,id',
+            'floor_id' => 'nullable|exists:floors,id',
+            'category' => 'nullable|max:100',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'turn_on_time' => 'required',
+            'turn_off_time' => 'nullable',
+            'recurrence' => 'required|in:daily,weekly,monthly,once',
+            'status' => 'required|in:active,inactive,disabled',
+            'equipment_ids' => 'nullable|array',
+            'equipment_ids.*' => 'exists:equipment,id',
+        ]);
+        $data['repeat_days'] = $request->input('repeat_days', []);
+        $equipmentIds = $data['equipment_ids'] ?? [];
+        unset($data['equipment_ids']);
+
+        $schedule->update($data);
+        $schedule->equipment()->sync($equipmentIds);
+
+        return redirect()->route('schedules.index')->with('success','Schedule updated successfully.');
+    }
+
+    public function destroy(Schedule $schedule)
+    {
+        $schedule->equipment()->detach();
+        $schedule->delete();
+        return redirect()->route('schedules.index')->with('success','Schedule deleted.');
     }
 
     public function toggle(Schedule $schedule)

@@ -8,6 +8,18 @@ use Illuminate\Http\Request;
 
 class EquipmentController extends Controller
 {
+    public function search(Request $request)
+    {
+        $q = trim((string) $request->input('q', ''));
+        $results = Equipment::with(['category','building','floor'])
+            ->when($q !== '', fn($qb) => $qb->where(fn($w) => $w
+                ->where('name','like',"%{$q}%")
+                ->orWhere('code','like',"%{$q}%")))
+            ->limit(20)
+            ->get(['id','name','code','category_id','building_id','floor_id']);
+        return response()->json($results);
+    }
+
     public function index(Request $request)
     {
         $query = Equipment::with(['category','building','floor']);
@@ -55,15 +67,26 @@ class EquipmentController extends Controller
         return response()->json($equipment);
     }
 
+    public function create()
+    {
+        $categories = EquipmentCategory::all();
+        $buildings = Building::where('status','active')->with('floors')->get();
+        return view('equipment.create', compact('categories','buildings'));
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
             'code' => 'required|unique:equipment|max:30',
             'name' => 'required|max:255',
+            'manufacturer' => 'nullable|max:100',
+            'model_number' => 'nullable|max:100',
             'building_id' => 'required|exists:buildings,id',
+            'floor_id' => 'nullable|exists:floors,id',
             'category_id' => 'required|exists:equipment_categories,id',
             'status' => 'required|in:active,inactive,offline,maintenance',
             'health_score' => 'nullable|integer|between:0,100',
+            'notes' => 'nullable',
         ]);
         Equipment::create($data);
         return redirect()->route('equipment.index')->with('success', 'Equipment created.');
@@ -71,15 +94,23 @@ class EquipmentController extends Controller
 
     public function edit(Equipment $equipment)
     {
-        return view('equipment.edit', compact('equipment'));
+        $categories = EquipmentCategory::all();
+        $buildings = Building::where('status','active')->with('floors')->get();
+        return view('equipment.edit', compact('equipment','categories','buildings'));
     }
 
     public function update(Request $request, Equipment $equipment)
     {
         $data = $request->validate([
             'name' => 'required|max:255',
+            'manufacturer' => 'nullable|max:100',
+            'model_number' => 'nullable|max:100',
+            'building_id' => 'required|exists:buildings,id',
+            'floor_id' => 'nullable|exists:floors,id',
+            'category_id' => 'required|exists:equipment_categories,id',
             'status' => 'required|in:active,inactive,offline,maintenance',
             'health_score' => 'nullable|integer|between:0,100',
+            'notes' => 'nullable',
         ]);
         $equipment->update($data);
         return redirect()->route('equipment.index')->with('success', 'Equipment updated.');

@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', __('menu.energy_management'))
+@section('page-title', 'Energy Management / การจัดการพลังงาน')
+@section('page-subtitle', 'Monitor energy consumption across all buildings')
 
 @section('content')
 <div class="container-fluid px-4 py-3">
@@ -31,7 +33,7 @@
 
     {{-- Stat Cards --}}
     <div class="row g-3 mb-4">
-        <div class="col-xl-3 col-md-6">
+        <div class="col-xl col-md-6">
             <div class="stat-card">
                 <div class="stat-icon" style="background:rgba(29,78,216,0.15)">
                     <i class="fa-solid fa-calendar-day" style="color:#1d4ed8"></i>
@@ -43,7 +45,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-xl col-md-6">
             <div class="stat-card">
                 <div class="stat-icon" style="background:rgba(6,182,212,0.15)">
                     <i class="fa-solid fa-calendar-month" style="color:#06b6d4"></i>
@@ -55,7 +57,31 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-xl col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(34,197,94,0.15)">
+                    <i class="fa-solid fa-solar-panel" style="color:#16a34a"></i>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-label">Solar Today</div>
+                    <div class="stat-value">{{ number_format($solarTodayKwh, 1) }}</div>
+                    <div class="stat-unit text-muted small">kWh generated</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(16,185,129,0.15)">
+                    <i class="fa-solid fa-leaf" style="color:#10b981"></i>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-label">Solar Offset</div>
+                    <div class="stat-value">{{ number_format($solarCoverage, 1) }}%</div>
+                    <div class="stat-unit text-muted small">Grid import {{ number_format($gridImportToday, 1) }} kWh</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl col-md-6">
             <div class="stat-card">
                 <div class="stat-icon" style="background:rgba(245,158,11,0.15)">
                     <i class="fa-solid fa-gauge-high" style="color:#f59e0b"></i>
@@ -67,7 +93,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-xl col-md-6">
             <div class="stat-card">
                 <div class="stat-icon" style="background:rgba(16,185,129,0.15)">
                     <i class="fa-solid fa-coins" style="color:#10b981"></i>
@@ -76,6 +102,32 @@
                     <div class="stat-label">{{ __('menu.cost_estimate') ?? "Cost Estimate" }}</div>
                     <div class="stat-value">{{ number_format($costEstimate, 0) }}</div>
                     <div class="stat-unit text-muted small">THB / month</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Solar Production vs Consumption --}}
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="nx-card">
+                <div class="nx-card-header d-flex align-items-start justify-content-between gap-3">
+                    <div>
+                        <div>
+                            <i class="fa-solid fa-solar-panel me-2" style="color:#16a34a"></i>
+                            Solar Production vs Consumption / ผลิตไฟโซล่าเทียบกับการใช้ไฟ
+                        </div>
+                        <div class="text-muted small mt-1">
+                            Month solar generation {{ number_format($solarMonthKwh, 1) }} kWh · shows consumption, solar production, and grid import
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap justify-content-end">
+                        <button type="button" class="nx-btn nx-btn-primary nx-btn-sm solar-range-btn" data-range="today">Today</button>
+                        <button type="button" class="nx-btn nx-btn-outline nx-btn-sm solar-range-btn" data-range="month">Month</button>
+                    </div>
+                </div>
+                <div class="nx-card-body p-0">
+                    <div id="chart-solar" style="height:300px;"></div>
                 </div>
             </div>
         </div>
@@ -218,8 +270,82 @@
 (function () {
     // --- 30-Day Trend Chart ---
     const trendRaw = @json($trendData);
-    const trendDates = trendRaw.map(d => d.date);
-    const trendKwh  = trendRaw.map(d => parseFloat(d.kwh));
+    const trendDates = trendRaw.days || [];
+    const trendKwh  = (trendRaw.current || []).map(v => parseFloat(v));
+    const compactTrendDates = trendDates.map(label => {
+        const parts = String(label).split(' ');
+        return parts.length >= 2 ? `${parts[0]} ${parts[1]}` : String(label);
+    });
+    const solarRaw = @json($solarData);
+
+    const solarChart = new ApexCharts(document.querySelector('#chart-solar'), {
+        chart: {
+            type: 'line',
+            height: 300,
+            background: 'transparent',
+            toolbar: { show: false },
+            zoom: { enabled: false }
+        },
+        series: [
+            { name: 'Consumption', data: solarRaw.today.consumption },
+            { name: 'Solar Production', data: solarRaw.today.production },
+            { name: 'Grid Import', data: solarRaw.today.gridImport }
+        ],
+        xaxis: {
+            type: 'category',
+            categories: solarRaw.today.categories,
+            labels: {
+                style: { colors: '#8898aa', fontSize: '11px' },
+                rotate: -35,
+                trim: false,
+                hideOverlappingLabels: true
+            },
+            axisBorder: { show: false },
+            axisTicks: { show: false }
+        },
+        yaxis: {
+            labels: { style: { colors: '#8898aa', fontSize: '11px' }, formatter: v => v.toFixed(0) + ' kWh' }
+        },
+        colors: ['#1d4ed8', '#16a34a', '#f59e0b'],
+        stroke: { curve: 'smooth', width: [2.5, 3, 2] },
+        markers: { size: 0, hover: { size: 5 } },
+        dataLabels: { enabled: false },
+        grid: { borderColor: 'rgba(255,255,255,0.06)', strokeDashArray: 4 },
+        legend: {
+            show: true,
+            position: 'bottom',
+            horizontalAlign: 'left',
+            fontSize: '12px',
+            markers: { width: 9, height: 9 }
+        },
+        tooltip: {
+            shared: true,
+            intersect: false,
+            theme: 'dark',
+            y: { formatter: v => v.toFixed(1) + ' kWh' }
+        }
+    });
+    solarChart.render();
+
+    document.querySelectorAll('.solar-range-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const range = button.dataset.range;
+            const selected = solarRaw[range];
+            solarChart.updateOptions({
+                xaxis: { categories: selected.categories }
+            });
+            solarChart.updateSeries([
+                { name: 'Consumption', data: selected.consumption },
+                { name: 'Solar Production', data: selected.production },
+                { name: 'Grid Import', data: selected.gridImport }
+            ]);
+
+            document.querySelectorAll('.solar-range-btn').forEach(item => {
+                item.classList.toggle('nx-btn-primary', item === button);
+                item.classList.toggle('nx-btn-outline', item !== button);
+            });
+        });
+    });
 
     new ApexCharts(document.querySelector('#chart-trend'), {
         chart: {
@@ -231,11 +357,14 @@
         },
         series: [{ name: 'kWh', data: trendKwh }],
         xaxis: {
-            categories: trendDates,
+            type: 'category',
+            categories: compactTrendDates,
+            tickPlacement: 'on',
             labels: {
                 style: { colors: '#8898aa', fontSize: '11px' },
                 rotate: -35,
-                formatter: v => v ? v.slice(5) : ''
+                trim: false,
+                hideOverlappingLabels: true
             },
             axisBorder: { show: false },
             axisTicks: { show: false }
@@ -268,11 +397,8 @@
 
     // --- Hourly Bar Chart ---
     const hourlyRaw = @json($hourlyData);
-    const allHours = Array.from({length: 24}, (_, i) => i);
-    const hourlyMap = {};
-    hourlyRaw.forEach(h => { hourlyMap[h.hour] = parseFloat(h.kwh); });
-    const hourlyKwh = allHours.map(h => hourlyMap[h] ?? 0);
-    const hourLabels = allHours.map(h => (h < 10 ? '0' + h : '' + h) + ':00');
+    const hourLabels = hourlyRaw.hours || Array.from({length: 24}, (_, i) => (i < 10 ? '0' + i : '' + i) + ':00');
+    const hourlyKwh = (hourlyRaw.values || []).map(v => parseFloat(v));
 
     new ApexCharts(document.querySelector('#chart-hourly'), {
         chart: {

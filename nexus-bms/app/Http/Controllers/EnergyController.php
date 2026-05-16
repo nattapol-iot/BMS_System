@@ -59,9 +59,33 @@ class EnergyController extends Controller
             ['system'=>'HVAC System','building'=>'Tower B','consumption'=>25000,'pct'=>25],
         ];
 
+        $selectedBuilding = $buildingId ? Building::find($buildingId) : null;
+
+        $meterQuery = EnergyMeter::with('floor')->when($buildingId, fn($q) => $q->where('building_id', $buildingId));
+        $meters = $meterQuery->get()->map(function ($m) {
+            $m->today_kwh = (float) EnergyLog::where('meter_id', $m->id)
+                ->whereDate('logged_at', Carbon::today())->sum('value');
+            $m->monthly_kwh = (float) EnergyLog::where('meter_id', $m->id)
+                ->whereBetween('logged_at', [Carbon::now()->startOfMonth(), Carbon::now()])->sum('value');
+            return $m;
+        });
+
+        $todayKwh = (float) EnergyLog::whereIn('meter_id', $elecMeters)
+            ->whereDate('logged_at', Carbon::today())->sum('value');
+        $monthKwh = (float) EnergyLog::whereIn('meter_id', $elecMeters)
+            ->whereBetween('logged_at', [Carbon::now()->startOfMonth(), Carbon::now()])->sum('value');
+        $costEstimate = round($monthKwh * 4.5, 0);
+        $solarData = $this->getSolarComparisonData($hourlyData, $trendData);
+        $solarTodayKwh = round(collect($solarData['today']['production'])->sum(), 1);
+        $solarMonthKwh = round(collect($solarData['month']['production'])->sum(), 1);
+        $solarCoverage = $todayKwh > 0 ? round(($solarTodayKwh / $todayKwh) * 100, 1) : 0;
+        $gridImportToday = round(max($todayKwh - $solarTodayKwh, 0), 1);
+
         return view('energy.index', compact(
-            'buildings','startDate','endDate','buildingId',
-            'totalConsumption','peakDemand','electricityCost','waterConsumption','avgPowerFactor','carbonEmission',
+            'buildings','selectedBuilding','meters','startDate','endDate','buildingId',
+            'todayKwh','monthKwh','peakDemand','costEstimate',
+            'solarData','solarTodayKwh','solarMonthKwh','solarCoverage','gridImportToday',
+            'totalConsumption','electricityCost','waterConsumption','avgPowerFactor','carbonEmission',
             'trendData','hourlyData','energyBreakdown','topConsumers'
         ));
     }
@@ -90,5 +114,45 @@ class EnergyController extends Controller
             $values[] = rand(100, 600);
         }
         return ['hours'=>$hours,'values'=>$values];
+    }
+
+    private function getSolarComparisonData(array $hourlyData, array $trendData): array
+    {
+        $hourlyConsumption = collect($hourlyData['values'] ?? [])->map(fn($value) => (float) $value)->values();
+        $hourlyProduction = $hourlyConsumption->map(function ($usage, $index) {
+            $hour = (int) $index;
+            if ($hour < 6 || $hour > 18) {
+                return 0;
+            }
+
+            $sunFactor = sin((($hour - 6) / 12) * pi());
+            $production = ($usage * 0.55 * $sunFactor) + (90 * $sunFactor);
+            return round(max($production, 0), 1);
+        })->values();
+
+        $dailyConsumption = collect($trendData['current'] ?? [])->map(fn($value) => (float) $value)->values();
+        $dailyProduction = $dailyConsumption->map(function ($usage, $index) {
+            $sunnyFactor = 0.24 + (0.08 * sin(($index + 1) * 1.15));
+            return round(max($usage * $sunnyFactor, 0), 1);
+        })->values();
+
+        return [
+            'today' => [
+                'categories' => $hourlyData['hours'] ?? [],
+                'consumption' => $hourlyConsumption,
+                'production' => $hourlyProduction,
+                'gridImport' => $hourlyConsumption->zip($hourlyProduction)
+                    ->map(fn($pair) => round(max(($pair[0] ?? 0) - ($pair[1] ?? 0), 0), 1))
+                    ->values(),
+            ],
+            'month' => [
+                'categories' => $trendData['days'] ?? [],
+                'consumption' => $dailyConsumption,
+                'production' => $dailyProduction,
+                'gridImport' => $dailyConsumption->zip($dailyProduction)
+                    ->map(fn($pair) => round(max(($pair[0] ?? 0) - ($pair[1] ?? 0), 0), 1))
+                    ->values(),
+            ],
+        ];
     }
 }

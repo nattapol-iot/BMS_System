@@ -17,6 +17,29 @@ class UserController extends Controller
         return view('users.index', compact('users','roles','totalUsers','activeUsers'));
     }
 
+    public function create()
+    {
+        $roles = Role::all();
+        return view('users.create', compact('roles'));
+    }
+
+    public function edit(User $user)
+    {
+        $roles = Role::all();
+        return view('users.edit', compact('user','roles'));
+    }
+
+    public function deactivate(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error','Cannot deactivate your own account.');
+        }
+        $newStatus = $user->status === 'active' ? 'inactive' : 'active';
+        $user->update(['status' => $newStatus]);
+        $msg = $newStatus === 'active' ? 'User reactivated.' : 'User deactivated.';
+        return redirect()->route('users.index')->with('success', $msg);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

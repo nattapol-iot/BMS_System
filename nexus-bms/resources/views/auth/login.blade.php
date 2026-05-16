@@ -14,12 +14,8 @@
 
         <div style="position:relative;z-index:1;text-align:center;max-width:420px;">
             <!-- Logo -->
-            <div style="display:inline-flex;align-items:center;gap:16px;margin-bottom:40px;">
-                <div style="width:64px;height:64px;background:linear-gradient(135deg,#1d4ed8,#06b6d4);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:white;box-shadow:0 8px 32px rgba(29,78,216,0.4);">N</div>
-                <div style="text-align:left;">
-                    <div style="font-size:28px;font-weight:800;color:white;letter-spacing:-0.5px;">Nexus</div>
-                    <div style="font-size:14px;color:rgba(255,255,255,0.5);font-weight:400;">BMS Platform</div>
-                </div>
+            <div class="platform-logo-card login-hero">
+                <img src="{{ asset('images/nexus-logo-cropped.png') }}" alt="Nexus BMS Platform">
             </div>
 
             <h1 style="font-size:32px;font-weight:700;color:white;margin-bottom:12px;line-height:1.3;">
@@ -65,7 +61,9 @@
         <div style="max-width:380px;width:100%;margin:0 auto;">
             <!-- Header -->
             <div style="margin-bottom:36px;">
-                <div style="width:48px;height:48px;background:linear-gradient(135deg,#1d4ed8,#06b6d4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:white;margin-bottom:20px;">N</div>
+                <div class="platform-logo-card login-panel">
+                    <img src="{{ asset('images/nexus-logo-cropped.png') }}" alt="Nexus BMS Platform">
+                </div>
                 <h2 style="font-size:26px;font-weight:700;color:#1e293b;margin-bottom:6px;">{{ __('auth.welcome_back') }}</h2>
                 <p style="color:#64748b;font-size:14px;">{{ __('auth.login_subtitle') }}</p>
             </div>

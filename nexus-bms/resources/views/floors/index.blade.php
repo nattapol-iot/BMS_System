@@ -59,6 +59,16 @@
                             <defs>
                                 <filter id="shadow"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/></filter>
                             </defs>
+                            <style>
+                                .equip-dot {
+                                    vector-effect: non-scaling-stroke;
+                                    filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.18));
+                                }
+                                .equip-label {
+                                    pointer-events: none;
+                                    user-select: none;
+                                }
+                            </style>
 
                             <!-- Background -->
                             <rect width="800" height="500" fill="#f0f4f8"/>
@@ -134,33 +144,35 @@
 
                             <!-- EQUIPMENT POINTS -->
                             <!-- HVAC -->
-                            <circle cx="110" cy="50" r="9" fill="#3b82f6" stroke="white" stroke-width="2" class="equip-dot" data-type="hvac" data-name="AHU-07" style="cursor:pointer;filter:drop-shadow(0 0 4px #3b82f680)"/>
-                            <circle cx="285" cy="40" r="9" fill="#3b82f6" stroke="white" stroke-width="2" class="equip-dot" data-type="hvac" data-name="AHU-08" style="cursor:pointer;"/>
-                            <circle cx="145" cy="320" r="9" fill="#3b82f6" stroke="white" stroke-width="2" class="equip-dot" data-type="hvac" data-name="FCU-01" style="cursor:pointer;"/>
+                            <circle cx="58" cy="46" r="9" fill="#3b82f6" stroke="white" stroke-width="2" class="equip-dot" data-type="hvac" data-name="AHU-07" style="cursor:pointer;"/>
+                            <circle cx="335" cy="42" r="9" fill="#3b82f6" stroke="white" stroke-width="2" class="equip-dot" data-type="hvac" data-name="AHU-08" style="cursor:pointer;"/>
+                            <circle cx="52" cy="306" r="9" fill="#3b82f6" stroke="white" stroke-width="2" class="equip-dot" data-type="hvac" data-name="FCU-01" style="cursor:pointer;"/>
 
                             <!-- Fire Alarm -->
-                            <circle cx="200" cy="50" r="9" fill="#ef4444" stroke="white" stroke-width="2" class="equip-dot" data-type="fire" data-name="FAP-03" style="cursor:pointer;filter:drop-shadow(0 0 4px #ef444480)"/>
-                            <circle cx="600" cy="50" r="9" fill="#ef4444" stroke="white" stroke-width="2" class="equip-dot" data-type="fire" data-name="FAP-04" style="cursor:pointer;"/>
-                            <circle cx="350" cy="320" r="9" fill="#ef4444" stroke="white" stroke-width="2" class="equip-dot" data-type="fire" data-name="FAD-01" style="cursor:pointer;"/>
+                            <circle cx="176" cy="46" r="9" fill="#ef4444" stroke="white" stroke-width="2" class="equip-dot" data-type="fire" data-name="FAP-03" style="cursor:pointer;"/>
+                            <circle cx="615" cy="42" r="9" fill="#ef4444" stroke="white" stroke-width="2" class="equip-dot" data-type="fire" data-name="FAP-04" style="cursor:pointer;"/>
+                            <circle cx="312" cy="306" r="9" fill="#ef4444" stroke="white" stroke-width="2" class="equip-dot" data-type="fire" data-name="FAD-01" style="cursor:pointer;"/>
 
                             <!-- Lighting -->
-                            <circle cx="110" cy="140" r="9" fill="#f59e0b" stroke="white" stroke-width="2" class="equip-dot" data-type="light" data-name="LGT-2F-12" style="cursor:pointer;"/>
-                            <circle cx="385" cy="310" r="9" fill="#f59e0b" stroke="white" stroke-width="2" class="equip-dot" data-type="light" data-name="LGT-3F-01" style="cursor:pointer;"/>
-                            <circle cx="720" cy="50" r="9" fill="#f59e0b" stroke="white" stroke-width="2" class="equip-dot" data-type="light" data-name="LGT-3F-02" style="cursor:pointer;"/>
+                            <circle cx="58" cy="166" r="9" fill="#f59e0b" stroke="white" stroke-width="2" class="equip-dot" data-type="light" data-name="LGT-2F-12" style="cursor:pointer;"/>
+                            <circle cx="456" cy="306" r="9" fill="#f59e0b" stroke="white" stroke-width="2" class="equip-dot" data-type="light" data-name="LGT-3F-01" style="cursor:pointer;"/>
+                            <circle cx="760" cy="42" r="9" fill="#f59e0b" stroke="white" stroke-width="2" class="equip-dot" data-type="light" data-name="LGT-3F-02" style="cursor:pointer;"/>
 
                             <!-- Access Control -->
-                            <circle cx="212" cy="200" r="9" fill="#22c55e" stroke="white" stroke-width="2" class="equip-dot" data-type="access" data-name="ACD-2F-12" style="cursor:pointer;"/>
-                            <circle cx="498" cy="275" r="9" fill="#22c55e" stroke="white" stroke-width="2" class="equip-dot" data-type="access" data-name="ACD-3F-01" style="cursor:pointer;filter:drop-shadow(0 0 4px #ef444480)"/>
+                            <circle cx="176" cy="166" r="9" fill="#22c55e" stroke="white" stroke-width="2" class="equip-dot" data-type="access" data-name="ACD-2F-12" style="cursor:pointer;"/>
+                            <circle cx="470" cy="292" r="9" fill="#22c55e" stroke="white" stroke-width="2" class="equip-dot" data-type="access" data-name="ACD-3F-01" style="cursor:pointer;"/>
 
                             <!-- Sensors -->
-                            <circle cx="430" cy="50" r="7" fill="#8b5cf6" stroke="white" stroke-width="2" class="equip-dot" data-type="sensor" data-name="SENS-T01" style="cursor:pointer;"/>
-                            <circle cx="570" cy="320" r="7" fill="#8b5cf6" stroke="white" stroke-width="2" class="equip-dot" data-type="sensor" data-name="SENS-H01" style="cursor:pointer;"/>
+                            <circle cx="472" cy="42" r="7" fill="#8b5cf6" stroke="white" stroke-width="2" class="equip-dot" data-type="sensor" data-name="SENS-T01" style="cursor:pointer;"/>
+                            <circle cx="625" cy="300" r="7" fill="#8b5cf6" stroke="white" stroke-width="2" class="equip-dot" data-type="sensor" data-name="SENS-H01" style="cursor:pointer;"/>
 
                             <!-- Icons in dots -->
-                            <text x="110" y="54" text-anchor="middle" font-size="8" fill="white" font-family="sans-serif">A</text>
-                            <text x="285" y="44" text-anchor="middle" font-size="8" fill="white" font-family="sans-serif">A</text>
-                            <text x="200" y="54" text-anchor="middle" font-size="8" fill="white" font-family="sans-serif">F</text>
-                            <text x="600" y="54" text-anchor="middle" font-size="8" fill="white" font-family="sans-serif">F</text>
+                            <text x="58" y="50" text-anchor="middle" font-size="8" fill="white" font-family="sans-serif" class="equip-label">A</text>
+                            <text x="335" y="46" text-anchor="middle" font-size="8" fill="white" font-family="sans-serif" class="equip-label">A</text>
+                            <text x="52" y="310" text-anchor="middle" font-size="8" fill="white" font-family="sans-serif" class="equip-label">A</text>
+                            <text x="176" y="50" text-anchor="middle" font-size="8" fill="white" font-family="sans-serif" class="equip-label">F</text>
+                            <text x="615" y="46" text-anchor="middle" font-size="8" fill="white" font-family="sans-serif" class="equip-label">F</text>
+                            <text x="312" y="310" text-anchor="middle" font-size="8" fill="white" font-family="sans-serif" class="equip-label">F</text>
 
                             <!-- Equipment Tooltip overlay (hidden by default) -->
                             <g id="equipTooltip" style="display:none;">

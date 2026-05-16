@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', __('menu.activity_logs') ?? 'Activity Logs')
+@section('page-title', 'Activity Logs / บันทึกการใช้งาน')
+@section('page-subtitle', 'Complete audit trail of all system activities')
 
 @section('content')
 <div class="container-fluid px-4 py-3">

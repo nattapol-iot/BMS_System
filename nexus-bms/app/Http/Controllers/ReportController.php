@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Report;
+use App\Models\Building;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -9,7 +10,8 @@ class ReportController extends Controller
     public function index()
     {
         $reports = Report::with('generator')->orderByDesc('created_at')->paginate(15);
-        return view('reports.index', compact('reports'));
+        $buildings = Building::where('status','active')->get();
+        return view('reports.index', compact('reports','buildings'));
     }
 
     public function generate(Request $request)

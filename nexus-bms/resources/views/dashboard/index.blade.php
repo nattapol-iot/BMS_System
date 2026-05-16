@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', __('menu.dashboard'))
-@section('page-title', __('menu.dashboard'))
+@section('page-title', 'Dashboard / แดชบอร์ด')
 @section('page-subtitle', __('dashboard.subtitle'))
 
 @section('content')
@@ -18,6 +18,20 @@
                 <div class="stat-trend {{ $stats['energyTrend'] >= 0 ? 'up' : 'down' }}">
                     <i class="fa-solid fa-arrow-{{ $stats['energyTrend'] >= 0 ? 'up' : 'down' }}"></i>
                     {{ abs($stats['energyTrend']) }}% {{ __('dashboard.vs_yesterday') }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Monthly Energy -->
+    <div class="col-xl col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon cyan"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="stat-content">
+                <div class="stat-value">{{ number_format($stats['currentMonthEnergy'], 0) }}</div>
+                <div class="stat-label">พลังงานเดือนนี้ (kWh)</div>
+                <div class="stat-trend {{ $stats['monthlyEnergyTrend'] >= 0 ? 'up' : 'down' }}">
+                    <i class="fa-solid fa-arrow-{{ $stats['monthlyEnergyTrend'] >= 0 ? 'up' : 'down' }}"></i>
+                    {{ abs($stats['monthlyEnergyTrend']) }}% เทียบเดือนที่แล้ว
                 </div>
             </div>
         </div>
@@ -82,42 +96,56 @@
 
 <!-- MIDDLE ROW -->
 <div class="row g-3 mb-4">
-    <!-- Energy Chart -->
-    <div class="col-xl-7">
-        <div class="nx-card" style="height:320px;">
+    <!-- Electricity Comparison Chart -->
+    <div class="col-xl-6">
+        <div class="nx-card utility-chart-card">
             <div class="nx-card-header">
-                <div class="nx-card-title"><i class="fa-solid fa-chart-line" style="color:var(--primary);margin-right:8px;"></i>{{ __('dashboard.energy_overview') }}</div>
-                <div style="display:flex;gap:6px;">
-                    <button class="nx-btn nx-btn-outline nx-btn-sm" onclick="setRange('7d')">7D</button>
-                    <button class="nx-btn nx-btn-primary nx-btn-sm" onclick="setRange('30d')">30D</button>
+                <div>
+                    <div class="nx-card-title"><i class="fa-solid fa-bolt" style="color:var(--primary);margin-right:8px;"></i>Electricity Usage / การใช้ไฟ</div>
+                    <div class="utility-card-subtitle">
+                        Compare {{ $utilityComparisonData['electricity']['meterCount'] }} meters
+                        @if($utilityComparisonData['electricity']['floorCount'] > 0)
+                            across {{ $utilityComparisonData['electricity']['floorCount'] }} floors
+                        @else
+                            by building
+                        @endif
+                    </div>
+                </div>
+                <div class="utility-range-group" data-utility="electricity">
+                    <button type="button" class="nx-btn nx-btn-primary nx-btn-sm utility-range-btn" data-utility="electricity" data-range="day">Day</button>
+                    <button type="button" class="nx-btn nx-btn-outline nx-btn-sm utility-range-btn" data-utility="electricity" data-range="week">Week</button>
+                    <button type="button" class="nx-btn nx-btn-outline nx-btn-sm utility-range-btn" data-utility="electricity" data-range="month">Month</button>
                 </div>
             </div>
-            <div class="nx-card-body" style="padding:12px 16px;">
-                <div id="energyChart" style="height:230px;"></div>
+            <div class="nx-card-body utility-chart-body">
+                <div id="electricityUsageChart" class="utility-chart"></div>
             </div>
         </div>
     </div>
 
-    <!-- Energy Breakdown -->
-    <div class="col-xl-5">
-        <div class="nx-card" style="height:320px;">
+    <!-- Water Comparison Chart -->
+    <div class="col-xl-6">
+        <div class="nx-card utility-chart-card">
             <div class="nx-card-header">
-                <div class="nx-card-title"><i class="fa-solid fa-chart-pie" style="color:var(--warning);margin-right:8px;"></i>{{ __('dashboard.energy_breakdown') }}</div>
-                <span class="nx-badge badge-info">{{ __('dashboard.this_month') }}</span>
-            </div>
-            <div class="nx-card-body" style="padding:8px;display:flex;align-items:center;gap:12px;">
-                <div id="energyDonut" style="width:160px;flex-shrink:0;"></div>
-                <div style="flex:1;">
-                    @foreach($energyBreakdown as $item)
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;">
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <div style="width:10px;height:10px;border-radius:2px;background:{{ $item['color'] }};flex-shrink:0;"></div>
-                            <span style="font-size:12px;color:var(--text-muted);">{{ $item['label'] }}</span>
-                        </div>
-                        <strong style="font-size:12px;">{{ $item['value'] }}%</strong>
+                <div>
+                    <div class="nx-card-title"><i class="fa-solid fa-droplet" style="color:#06b6d4;margin-right:8px;"></i>Water Usage / การใช้น้ำ</div>
+                    <div class="utility-card-subtitle">
+                        Compare {{ $utilityComparisonData['water']['meterCount'] }} meters
+                        @if($utilityComparisonData['water']['floorCount'] > 0)
+                            across {{ $utilityComparisonData['water']['floorCount'] }} floors
+                        @else
+                            by building
+                        @endif
                     </div>
-                    @endforeach
                 </div>
+                <div class="utility-range-group" data-utility="water">
+                    <button type="button" class="nx-btn nx-btn-primary nx-btn-sm utility-range-btn" data-utility="water" data-range="day">Day</button>
+                    <button type="button" class="nx-btn nx-btn-outline nx-btn-sm utility-range-btn" data-utility="water" data-range="week">Week</button>
+                    <button type="button" class="nx-btn nx-btn-outline nx-btn-sm utility-range-btn" data-utility="water" data-range="month">Month</button>
+                </div>
+            </div>
+            <div class="nx-card-body utility-chart-body">
+                <div id="waterUsageChart" class="utility-chart"></div>
             </div>
         </div>
     </div>
@@ -195,52 +223,73 @@
 
 @section('scripts')
 <script>
-// Energy Chart
-const energyData = @json($energyChartData);
-const energyBreakdownData = @json($energyBreakdown);
+const utilityComparisonData = @json($utilityComparisonData);
+const utilityCharts = {};
 
-// Area Chart
-const energyChart = new ApexCharts(document.getElementById('energyChart'), {
-    chart: { type: 'area', height: 230, toolbar: { show: false }, sparkline: { enabled: false } },
-    series: [{
-        name: '{{ __("dashboard.energy_kwh") }}',
-        data: energyData.values
-    }],
-    xaxis: { categories: energyData.days, labels: { style: { fontSize: '11px', colors: '#94a3b8' } } },
-    yaxis: { labels: { style: { fontSize: '11px', colors: '#94a3b8' }, formatter: v => v.toLocaleString() } },
-    colors: ['#1d4ed8'],
-    fill: {
-        type: 'gradient',
-        gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02, stops: [0, 90] }
-    },
-    stroke: { curve: 'smooth', width: 2.5 },
-    grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
-    dataLabels: { enabled: false },
-    tooltip: { y: { formatter: v => v.toLocaleString() + ' kWh' } }
-});
-energyChart.render();
+function createUtilityChart(type, elementId, colors) {
+    const utility = utilityComparisonData[type];
+    const initial = utility.periods.day;
 
-// Donut Chart
-const energyDonut = new ApexCharts(document.getElementById('energyDonut'), {
-    chart: { type: 'donut', height: 200 },
-    series: energyBreakdownData.map(d => d.value),
-    labels: energyBreakdownData.map(d => d.label),
-    colors: energyBreakdownData.map(d => d.color),
-    legend: { show: false },
-    plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '11px', color: '#64748b', formatter: () => '100%' } } } } },
-    dataLabels: { enabled: false },
-    stroke: { width: 0 }
-});
-energyDonut.render();
-
-// Range switcher (placeholder — wire to AJAX as needed)
-function setRange(range) {
-    document.querySelectorAll('.nx-btn-outline.nx-btn-sm, .nx-btn-primary.nx-btn-sm').forEach(btn => {
-        btn.classList.remove('nx-btn-primary');
-        btn.classList.add('nx-btn-outline');
+    utilityCharts[type] = new ApexCharts(document.getElementById(elementId), {
+        chart: {
+            type: 'line',
+            height: 260,
+            toolbar: { show: false },
+            zoom: { enabled: false }
+        },
+        series: initial.series,
+        colors,
+        xaxis: {
+            categories: initial.categories,
+            labels: { style: { fontSize: '11px', colors: '#94a3b8' } }
+        },
+        yaxis: {
+            labels: {
+                style: { fontSize: '11px', colors: '#94a3b8' },
+                formatter: value => Number(value).toLocaleString()
+            },
+            title: { text: utility.unit, style: { color: '#64748b', fontSize: '11px', fontWeight: 600 } }
+        },
+        stroke: { curve: 'smooth', width: 2.5 },
+        markers: { size: 0, hover: { size: 5 } },
+        grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
+        dataLabels: { enabled: false },
+        legend: {
+            show: true,
+            position: 'bottom',
+            horizontalAlign: 'left',
+            fontSize: '11px',
+            markers: { width: 8, height: 8 }
+        },
+        tooltip: {
+            shared: true,
+            intersect: false,
+            y: { formatter: value => `${Number(value).toLocaleString()} ${utility.unit}` }
+        },
+        noData: { text: 'No meter data available' }
     });
-    event.target.classList.remove('nx-btn-outline');
-    event.target.classList.add('nx-btn-primary');
+
+    utilityCharts[type].render();
 }
+
+function setUtilityRange(type, range) {
+    const selected = utilityComparisonData[type].periods[range];
+    utilityCharts[type].updateOptions({
+        xaxis: { categories: selected.categories }
+    });
+    utilityCharts[type].updateSeries(selected.series);
+
+    document.querySelectorAll(`.utility-range-btn[data-utility="${type}"]`).forEach(button => {
+        button.classList.toggle('nx-btn-primary', button.dataset.range === range);
+        button.classList.toggle('nx-btn-outline', button.dataset.range !== range);
+    });
+}
+
+createUtilityChart('electricity', 'electricityUsageChart', ['#1d4ed8', '#06b6d4', '#8b5cf6', '#f59e0b', '#22c55e', '#ef4444', '#64748b']);
+createUtilityChart('water', 'waterUsageChart', ['#06b6d4', '#0ea5e9', '#14b8a6', '#3b82f6', '#6366f1', '#22c55e', '#64748b']);
+
+document.querySelectorAll('.utility-range-btn').forEach(button => {
+    button.addEventListener('click', () => setUtilityRange(button.dataset.utility, button.dataset.range));
+});
 </script>
 @endsection

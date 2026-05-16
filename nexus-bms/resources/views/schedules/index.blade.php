@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', __('menu.schedule_overview') ?? 'Schedule Overview')
+@section('page-title', 'Schedule Overview / ภาพรวมกำหนดการ')
+@section('page-subtitle', 'Manage automated schedules for HVAC, lighting and access control')
 
 @section('content')
 <div class="container-fluid px-4 py-3">
@@ -59,7 +61,7 @@
                 </div>
                 <div class="stat-body">
                     <div class="stat-label">{{ __('menu.active') ?? 'Active' }}</div>
-                    <div class="stat-value">{{ $schedules->getCollection()->where('is_active', true)->count() }}</div>
+                    <div class="stat-value">{{ $activeSchedules }}</div>
                 </div>
             </div>
         </div>
@@ -70,7 +72,7 @@
                 </div>
                 <div class="stat-body">
                     <div class="stat-label">HVAC</div>
-                    <div class="stat-value">{{ $schedules->getCollection()->where('schedule_type', 'hvac')->count() }}</div>
+                    <div class="stat-value">{{ $schedules->getCollection()->where('category', 'HVAC')->count() }}</div>
                 </div>
             </div>
         </div>
@@ -81,7 +83,7 @@
                 </div>
                 <div class="stat-body">
                     <div class="stat-label">{{ __('menu.lighting') ?? 'Lighting' }}</div>
-                    <div class="stat-value">{{ $schedules->getCollection()->where('schedule_type', 'lighting')->count() }}</div>
+                    <div class="stat-value">{{ $schedules->getCollection()->where('category', 'Lighting')->count() }}</div>
                 </div>
             </div>
         </div>
@@ -125,36 +127,37 @@
                         @foreach($schedules as $s)
                         @php
                             $typeColors = [
-                                'hvac'           => ['bg'=>'rgba(6,182,212,0.15)','color'=>'#06b6d4','icon'=>'fa-wind'],
-                                'lighting'       => ['bg'=>'rgba(245,158,11,0.15)','color'=>'#f59e0b','icon'=>'fa-lightbulb'],
-                                'access_control' => ['bg'=>'rgba(16,185,129,0.15)','color'=>'#10b981','icon'=>'fa-door-open'],
-                                'general'        => ['bg'=>'rgba(107,114,128,0.15)','color'=>'#9ca3af','icon'=>'fa-gear'],
+                                'HVAC'           => ['bg'=>'rgba(6,182,212,0.15)','color'=>'#06b6d4','icon'=>'fa-wind'],
+                                'Lighting'       => ['bg'=>'rgba(245,158,11,0.15)','color'=>'#f59e0b','icon'=>'fa-lightbulb'],
+                                'Access Control' => ['bg'=>'rgba(16,185,129,0.15)','color'=>'#10b981','icon'=>'fa-door-open'],
+                                'Maintenance'    => ['bg'=>'rgba(239,68,68,0.15)','color'=>'#ef4444','icon'=>'fa-screwdriver-wrench'],
+                                'general'        => ['bg'=>'rgba(107,114,128,0.15)','color'=>'#64748b','icon'=>'fa-gear'],
                             ];
-                            $tc = $typeColors[$s->schedule_type] ?? $typeColors['general'];
-                            $dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-                            $dayMap   = [0=>'Sun',1=>'Mon',2=>'Tue',3=>'Wed',4=>'Thu',5=>'Fri',6=>'Sat'];
+                            $tc = $typeColors[$s->category] ?? $typeColors['general'];
+                            $dayMap = ['sun'=>'Sun','mon'=>'Mon','tue'=>'Tue','wed'=>'Wed','thu'=>'Thu','fri'=>'Fri','sat'=>'Sat'];
                             $repeatDays = is_array($s->repeat_days) ? $s->repeat_days : json_decode($s->repeat_days ?? '[]', true);
+                            $repeatDays = array_map(fn($day) => strtolower((string) $day), $repeatDays ?: []);
                         @endphp
                         <tr>
                             <td class="fw-semibold text-white">{{ $s->name }}</td>
                             <td>
                                 <span class="nx-badge" style="background:{{ $tc['bg'] }};color:{{ $tc['color'] }}">
                                     <i class="fa-solid {{ $tc['icon'] }} me-1"></i>
-                                    {{ ucwords(str_replace('_', ' ', $s->schedule_type)) }}
+                                    {{ $s->category ?? 'General' }}
                                 </span>
                             </td>
                             <td class="text-muted">
                                 <i class="fa-regular fa-clock me-1"></i>
-                                {{ \Carbon\Carbon::parse($s->start_time)->format('H:i') }}
+                                {{ \Carbon\Carbon::parse($s->turn_on_time)->format('H:i') }}
                             </td>
                             <td class="text-muted">
                                 <i class="fa-regular fa-clock me-1"></i>
-                                {{ \Carbon\Carbon::parse($s->end_time)->format('H:i') }}
+                                {{ $s->turn_off_time ? \Carbon\Carbon::parse($s->turn_off_time)->format('H:i') : '—' }}
                             </td>
                             <td>
                                 <div class="d-flex flex-wrap gap-1">
-                                    @foreach($dayMap as $num => $abbr)
-                                        @php $active = in_array($num, $repeatDays) || in_array($abbr, $repeatDays); @endphp
+                                    @foreach($dayMap as $value => $abbr)
+                                        @php $active = in_array($value, $repeatDays); @endphp
                                         <span class="nx-chip" style="{{ $active ? 'background:rgba(29,78,216,0.25);color:#93c5fd;' : 'background:rgba(255,255,255,0.05);color:#4b5563;' }}font-size:.7rem;padding:1px 6px;">
                                             {{ $abbr }}
                                         </span>
@@ -163,7 +166,7 @@
                             </td>
                             <td class="text-center">
                                 <span class="nx-badge" style="background:rgba(29,78,216,0.15);color:#1d4ed8;">
-                                    {{ method_exists($s, 'deviceCount') ? $s->deviceCount() : ($s->devices_count ?? 0) }}
+                                    {{ $s->equipment->count() }}
                                 </span>
                             </td>
                             <td class="text-center">
@@ -172,7 +175,7 @@
                                            class="form-check-input"
                                            role="switch"
                                            style="cursor:pointer;"
-                                           {{ $s->is_active ? 'checked' : '' }}
+                                           {{ $s->status === 'active' ? 'checked' : '' }}
                                            onchange="toggleSchedule(this, {{ $s->id }})">
                                 </div>
                             </td>
@@ -215,7 +218,6 @@
 function toggleSchedule(el, id) {
     const isActive = el.checked ? 1 : 0;
     nexusPost(`/schedules/${id}/toggle`, { is_active: isActive })
-        .then(res => res.json())
         .then(data => {
             if (data.success) {
                 const label = el.checked ? 'Activated' : 'Deactivated';

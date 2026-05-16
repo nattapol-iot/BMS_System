@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', __('menu.reports') ?? 'Reports')
+@section('page-title', 'Reports / รายงาน')
+@section('page-subtitle', 'Generate and manage system reports')
 
 @section('content')
 <div class="container-fluid px-4 py-3">

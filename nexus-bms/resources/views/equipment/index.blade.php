@@ -7,7 +7,7 @@
 <div class="fade-in">
 
 <!-- STATS ROW -->
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-3 equipment-stats">
     <div class="col-md-3">
         <div class="stat-card">
             <div class="stat-icon blue"><i class="fa-solid fa-microchip"></i></div>
@@ -73,9 +73,9 @@
         <button type="submit" class="nx-btn nx-btn-primary nx-btn-sm"><i class="fa-solid fa-filter"></i> Filter</button>
         <a href="{{ route('equipment.index') }}" class="nx-btn nx-btn-outline nx-btn-sm">Reset</a>
         <button type="button" class="nx-btn nx-btn-outline nx-btn-sm ms-auto"><i class="fa-solid fa-file-export"></i> Export</button>
-        <button type="button" class="nx-btn nx-btn-primary nx-btn-sm" data-bs-toggle="modal" data-bs-target="#addEquipModal">
+        <a href="{{ route('equipment.create') }}" class="nx-btn nx-btn-primary nx-btn-sm">
             <i class="fa-solid fa-plus"></i> Add Equipment
-        </button>
+        </a>
     </form>
 </div>
 

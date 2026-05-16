@@ -118,9 +118,14 @@
                             @endforeach
                         </div>
 
-                        <a href="#" onclick="showBuildingDetail({{ $building->id }});return false;" class="nx-btn nx-btn-outline w-100 justify-content-center">
-                            <i class="fa-solid fa-eye"></i> View Details
-                        </a>
+                        <div class="d-flex gap-2">
+                            <a href="#" onclick="showBuildingDetail({{ $building->id }});return false;" class="nx-btn nx-btn-outline flex-fill justify-content-center">
+                                <i class="fa-solid fa-eye"></i> View
+                            </a>
+                            <a href="{{ route('buildings.edit', $building->id) }}" class="nx-btn nx-btn-primary" onclick="event.stopPropagation();" title="Edit" style="flex:0 0 auto;">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

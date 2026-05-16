@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') - Nexus BMS Platform</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/nexus-favicon.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <!-- Bootstrap 5 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <!-- Font Awesome -->
@@ -16,14 +18,17 @@
 <body>
 
 <!-- SIDEBAR -->
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <aside class="nx-sidebar" id="nxSidebar">
     <!-- Brand -->
     <a href="{{ route('dashboard') }}" class="sidebar-brand">
-        <div class="brand-icon">N</div>
-        <div class="brand-text">
-            <div class="brand-name">Nexus</div>
-            <div class="brand-sub">BMS Platform</div>
-        </div>
+        <span class="brand-mark">
+            <img src="{{ asset('images/nexus-mark.png') }}" alt="" aria-hidden="true">
+        </span>
+        <span class="brand-text">
+            <span class="brand-name">Nexus</span>
+            <span class="brand-sub">BMS Platform</span>
+        </span>
     </a>
 
     <!-- Navigation -->
@@ -127,9 +132,18 @@
 <div class="nx-main" id="nxMain">
     <!-- HEADER -->
     <header class="nx-header">
+        <button class="header-toggle sidebar-header-toggle" id="sidebarHeaderToggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+            <i class="fa-solid fa-bars"></i>
+        </button>
         <div class="header-breadcrumb">
             <div>
-                <div class="breadcrumb-title">@yield('page-title', 'Dashboard')</div>
+                <div class="breadcrumb-title">
+                    @hasSection('page-title')
+                        @yield('page-title')
+                    @else
+                        @yield('title', 'Dashboard')
+                    @endif
+                </div>
                 <div class="breadcrumb-sub">@yield('page-subtitle', '')</div>
             </div>
         </div>
@@ -245,20 +259,7 @@
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="{{ asset('js/nexus.js') }}"></script>
 @yield('scripts')
+@stack('scripts')
 
-<script>
-// Sidebar collapse icon sync
-const sidebar = document.getElementById('nxSidebar');
-const icon = document.getElementById('collapseIcon');
-if (sidebar && icon) {
-    const updateIcon = () => {
-        icon.className = sidebar.classList.contains('collapsed')
-            ? 'fa-solid fa-angles-right'
-            : 'fa-solid fa-angles-left';
-    };
-    updateIcon();
-    document.getElementById('sidebarToggle')?.addEventListener('click', () => setTimeout(updateIcon, 50));
-}
-</script>
 </body>
 </html>

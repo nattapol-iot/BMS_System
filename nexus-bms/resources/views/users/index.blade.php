@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', __('menu.users') ?? 'Users & Access')
+@section('page-title', 'Users & Access / ผู้ใช้และสิทธิ์')
+@section('page-subtitle', 'Manage system users and role-based access permissions')
 
 @section('content')
 <div class="container-fluid px-4 py-3">

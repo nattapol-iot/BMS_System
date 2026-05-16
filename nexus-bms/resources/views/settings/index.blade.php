@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', __('menu.settings') ?? 'System Settings')
+@section('page-title', 'System Settings / ตั้งค่าระบบ')
+@section('page-subtitle', 'Configure system-wide preferences and integrations')
 
 @section('content')
 <div class="container-fluid px-4 py-3">

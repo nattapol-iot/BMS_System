@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', __('menu.device_time_setting') ?? 'Device Time Setting')
+@section('page-title', 'Device Time Setting / ตั้งเวลาอุปกรณ์')
+@section('page-subtitle', 'Configure on/off time windows per device for each schedule')
 
 @section('content')
 <div class="container-fluid px-4 py-3">

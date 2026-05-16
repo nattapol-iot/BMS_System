@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', __('menu.calendar_view') ?? 'Calendar View')
+@section('page-title', 'Calendar View / มุมมองปฏิทิน')
+@section('page-subtitle', 'Visual schedule overview by month')
 
 @section('content')
 <div class="container-fluid px-4 py-3">

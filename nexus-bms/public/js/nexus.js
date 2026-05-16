@@ -4,15 +4,55 @@ document.addEventListener('DOMContentLoaded', function () {
     // Sidebar toggle
     const sidebar = document.getElementById('nxSidebar');
     const toggleBtn = document.getElementById('sidebarToggle');
-    if (toggleBtn && sidebar) {
-        toggleBtn.addEventListener('click', () => {
+    const headerToggleBtn = document.getElementById('sidebarHeaderToggle');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    const collapseIcon = document.getElementById('collapseIcon');
+    const isMobileSidebar = () => window.matchMedia('(max-width: 768px)').matches;
+    const syncSidebarControls = () => {
+        if (!sidebar) return;
+        const collapsed = sidebar.classList.contains('collapsed');
+        const open = sidebar.classList.contains('open');
+
+        if (collapseIcon) {
+            collapseIcon.className = collapsed && !isMobileSidebar()
+                ? 'fa-solid fa-angles-right'
+                : 'fa-solid fa-angles-left';
+        }
+        if (headerToggleBtn) {
+            headerToggleBtn.setAttribute('aria-expanded', String(isMobileSidebar() ? open : !collapsed));
+            headerToggleBtn.querySelector('i')?.classList.toggle('fa-xmark', isMobileSidebar() && open);
+            headerToggleBtn.querySelector('i')?.classList.toggle('fa-bars', !(isMobileSidebar() && open));
+        }
+        sidebarBackdrop?.classList.toggle('show', isMobileSidebar() && open);
+    };
+    const toggleSidebar = () => {
+        if (!sidebar) return;
+        if (isMobileSidebar()) {
+            sidebar.classList.toggle('open');
+        } else {
             sidebar.classList.toggle('collapsed');
             localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+        syncSidebarControls();
+    };
+
+    if (sidebar) {
+        [toggleBtn, headerToggleBtn].forEach(btn => btn?.addEventListener('click', toggleSidebar));
+        sidebarBackdrop?.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            syncSidebarControls();
         });
         // Restore state
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+        if (!isMobileSidebar() && localStorage.getItem('sidebarCollapsed') === 'true') {
             sidebar.classList.add('collapsed');
         }
+        window.addEventListener('resize', () => {
+            if (!isMobileSidebar()) {
+                sidebar.classList.remove('open');
+            }
+            syncSidebarControls();
+        });
+        syncSidebarControls();
     }
 
     // Active nav highlight
