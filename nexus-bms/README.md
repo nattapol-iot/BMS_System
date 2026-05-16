@@ -1,5 +1,7 @@
 # Nexus BMS Platform
 
+[![Tests](https://github.com/nattapol-iot/BMS_System/actions/workflows/tests.yml/badge.svg)](https://github.com/nattapol-iot/BMS_System/actions/workflows/tests.yml)
+
 A production-grade Building Management System (BMS) built with Laravel 12 and
 Bootstrap 5. Covers building/equipment management, alarm response, energy
 analytics, schedule automation, role-based access control, audit logging, and a
