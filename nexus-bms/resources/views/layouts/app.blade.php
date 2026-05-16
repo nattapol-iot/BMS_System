@@ -60,9 +60,10 @@
         <a href="{{ route('alarms.index') }}" class="nav-item {{ request()->routeIs('alarms.*') ? 'active' : '' }}">
             <span class="nav-icon"><i class="fa-solid fa-bell"></i></span>
             <span class="nav-label">{{ __('menu.alarms') }}</span>
-            @php $activeAlarms = \App\Models\Alarm::where('status','active')->count(); @endphp
-            @if($activeAlarms > 0)
-            <span class="nav-badge">{{ $activeAlarms }}</span>
+            @if(($activeAlarms ?? 0) > 0)
+            <span class="nav-badge" id="navAlarmBadge">{{ $activeAlarms }}</span>
+            @else
+            <span class="nav-badge" id="navAlarmBadge" style="display:none;">0</span>
             @endif
         </a>
 
@@ -167,8 +168,7 @@
                     <div style="padding:12px 16px; border-bottom:1px solid var(--border); font-weight:600; font-size:13px;">
                         {{ __('menu.notifications') }}
                     </div>
-                    @php $recentAlarms = \App\Models\Alarm::with('building')->where('status','active')->latest('triggered_at')->limit(4)->get(); @endphp
-                    @foreach($recentAlarms as $alarm)
+                    @foreach(($recentAlarms ?? collect()) as $alarm)
                     <a href="{{ route('alarms.index', ['detail'=>$alarm->id]) }}" class="nx-dropdown-item">
                         <span style="width:8px;height:8px;border-radius:50%;background:{{ $alarm->severity==='critical'?'#ef4444':'#f59e0b' }};flex-shrink:0"></span>
                         <div>
@@ -193,8 +193,7 @@
                 </button>
                 <div class="nx-dropdown-menu" id="buildingDropdown">
                     <div style="padding:8px 12px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase">{{ __('menu.select_building') }}</div>
-                    @php $navBuildings = \App\Models\Building::where('status','active')->limit(6)->get(); @endphp
-                    @foreach($navBuildings as $nb)
+                    @foreach(($navBuildings ?? collect()) as $nb)
                     <a class="nx-dropdown-item" href="#" onclick="document.getElementById('selectedBuilding').textContent='{{ $nb->name }}'">
                         <i class="fa-solid fa-building" style="color:var(--primary)"></i>
                         {{ $nb->name }}
@@ -260,6 +259,32 @@
 <script src="{{ asset('js/nexus.js') }}"></script>
 @yield('scripts')
 @stack('scripts')
+
+@auth
+<script>
+// Live nav badge polling — refresh active alarm count every 30s
+(function() {
+    const url = "{{ route('internal.nav-stats') }}";
+    function refresh() {
+        fetch(url, {headers: {'Accept': 'application/json'}, credentials: 'same-origin'})
+            .then(r => r.ok ? r.json() : null)
+            .then(d => {
+                if (!d) return;
+                const badge = document.getElementById('navAlarmBadge');
+                if (!badge) return;
+                if (d.active_alarms > 0) {
+                    badge.textContent = d.active_alarms;
+                    badge.style.display = '';
+                } else {
+                    badge.style.display = 'none';
+                }
+            })
+            .catch(() => {});
+    }
+    setInterval(refresh, 30000);
+})();
+</script>
+@endauth
 
 </body>
 </html>

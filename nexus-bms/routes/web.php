@@ -153,4 +153,13 @@ Route::middleware(['auth'])->group(function () {
     // Logs
     Route::get('/logs', [LogController::class, 'index'])
         ->middleware('can.permission:logs,view')->name('logs.index');
+
+    // Internal AJAX polling (authed, no permission gate beyond login)
+    Route::get('/internal/nav-stats', function () {
+        $count = \App\Models\Alarm::where('status', 'active')->count();
+        return response()->json([
+            'active_alarms' => $count,
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    })->name('internal.nav-stats');
 });
