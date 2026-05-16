@@ -1,0 +1,21 @@
+<?php
+return [
+    'subtitle' => 'Building Management Overview',
+    'energy_today' => 'Energy Today',
+    'hvac_status' => 'HVAC Status',
+    'water_today' => 'Water Today',
+    'active_alarms' => 'Active Alarms',
+    'system_health' => 'System Health',
+    'vs_yesterday' => 'vs yesterday',
+    'units_online' => 'units online',
+    'critical' => 'Critical',
+    'energy_overview' => 'Energy Usage Overview',
+    'energy_breakdown' => 'Energy Breakdown',
+    'this_month' => 'This Month',
+    'equipment_status' => 'Equipment Status',
+    'recent_alerts' => 'Recent Alerts',
+    'view_all' => 'View All',
+    'no_equipment' => 'No equipment data',
+    'no_alarms' => 'All systems normal',
+    'energy_kwh' => 'Energy (kWh)',
+];

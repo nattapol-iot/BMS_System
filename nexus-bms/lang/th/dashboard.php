@@ -1,0 +1,21 @@
+<?php
+return [
+    'subtitle' => 'ภาพรวมการบริหารจัดการอาคาร',
+    'energy_today' => 'พลังงานวันนี้',
+    'hvac_status' => 'สถานะ HVAC',
+    'water_today' => 'น้ำวันนี้',
+    'active_alarms' => 'สัญญาณเตือนที่ใช้งาน',
+    'system_health' => 'สุขภาพระบบ',
+    'vs_yesterday' => 'เทียบเมื่อวาน',
+    'units_online' => 'ยูนิตออนไลน์',
+    'critical' => 'วิกฤต',
+    'energy_overview' => 'ภาพรวมการใช้พลังงาน',
+    'energy_breakdown' => 'การแบ่งสัดส่วนพลังงาน',
+    'this_month' => 'เดือนนี้',
+    'equipment_status' => 'สถานะอุปกรณ์',
+    'recent_alerts' => 'สัญญาณเตือนล่าสุด',
+    'view_all' => 'ดูทั้งหมด',
+    'no_equipment' => 'ไม่มีข้อมูลอุปกรณ์',
+    'no_alarms' => 'ระบบทำงานปกติ',
+    'energy_kwh' => 'พลังงาน (kWh)',
+];
