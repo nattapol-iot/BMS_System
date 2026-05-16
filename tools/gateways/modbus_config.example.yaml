@@ -1,0 +1,77 @@
+# modbus_config.example.yaml
+#
+# Defines which Modbus devices to poll and which registers to read.
+# Copy to modbus_config.yaml and edit for your site.
+
+poll_interval_sec: 60
+
+devices:
+
+  # ---- Example 1: Schneider PM5560 power meter (Modbus TCP) ----
+  - name: "Nexus Tower A MDB Electricity"   # must match energy_meters.name in DB
+    kind: meter
+    slave_id: 1
+    connection:
+      type: tcp
+      host: 192.168.1.100
+      port: 502
+      timeout: 3
+    registers:
+      energy_kwh:
+        address: 3203          # 40-bit accumulator for Total Real Energy
+        count: 2
+        dtype: float32
+        wordorder: big
+        scale: 1.0
+      peak_demand:
+        address: 3055          # Demand Current Total Real Power
+        count: 2
+        dtype: float32
+        scale: 1.0
+      power_factor:
+        address: 3083          # Power factor total
+        count: 2
+        dtype: float32
+        scale: 1.0
+
+  # ---- Example 2: Eastron SDM630 power meter (Modbus RTU over RS-485) ----
+  - name: "Tower B Floor 3 Submeter"
+    kind: meter
+    slave_id: 2
+    connection:
+      type: rtu
+      port: /dev/ttyUSB0       # Windows: COM3 etc.
+      baudrate: 9600
+      bytesize: 8
+      parity: N
+      stopbits: 1
+      timeout: 1
+    registers:
+      energy_kwh:
+        address: 342           # Total kWh (input register, 30342 in 1-based docs)
+        count: 2
+        dtype: float32
+        function: input
+        scale: 1.0
+
+  # ---- Example 3: Advantech ADAM-6224 remote I/O (treat as equipment status) ----
+  - name: "PUMP-NTA-01"        # must match equipment.code
+    kind: equipment
+    slave_id: 3
+    connection:
+      type: tcp
+      host: 192.168.1.101
+      port: 502
+    registers:
+      status_code:              # 0=offline, 1=active, 2=maintenance, 3=inactive
+        address: 1
+        count: 1
+        dtype: uint16
+      health_score:
+        address: 2
+        count: 1
+        dtype: uint16
+      runtime_hours:
+        address: 10
+        count: 2
+        dtype: float32

@@ -128,6 +128,21 @@ scheduler with cron / Task Scheduler:
 When equipment transitions to `offline` or health drops below 50%, an alarm is
 auto-created and routed through `NotificationService` (LINE + email).
 
+### Connecting real devices
+
+Power meters (Modbus), Remote I/O modules, BACnet HVAC controllers, and MQTT
+sensors connect through an edge gateway that translates field protocols to the
+REST API above. See **[`docs/IOT_INTEGRATION.md`](../docs/IOT_INTEGRATION.md)**
+for the full guide, plus working reference scripts at
+**[`tools/gateways/`](../tools/gateways/)**:
+
+| Bridge                              | Use case                                           |
+|-------------------------------------|----------------------------------------------------|
+| `tools/gateways/modbus_to_nexus.py` | Schneider PM5560, Eastron SDM630, Advantech ADAM   |
+| `tools/gateways/mqtt_to_nexus.py`   | LoRaWAN, Tasmota, ESP32 publishing to MQTT broker  |
+| `tools/gateways/esp32_push.ino`     | Direct ESP32/Arduino HTTP push                     |
+| `tools/gateways/node-red-flow.json` | No-code flow: Modbus → Nexus via Node-RED          |
+
 #### Example: push equipment status
 
 ```bash
