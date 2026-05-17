@@ -1,8 +1,8 @@
 <?php
-namespace App\Services;
+namespace App\Core\Notifications;
 
 use App\Models\Alarm;
-use App\Models\SystemSetting;
+use App\Core\Settings\Models\SystemSetting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;

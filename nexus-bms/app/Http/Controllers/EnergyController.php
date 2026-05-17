@@ -7,7 +7,7 @@ use App\Models\Building;
 use App\Models\Floor;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
-use App\Models\SystemSetting;
+use App\Core\Settings\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 

@@ -1,7 +1,8 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Core\AuditLog\Controllers;
 
-use App\Models\ActivityLog;
+use App\Core\AuditLog\Models\ActivityLog;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 class LogController extends Controller

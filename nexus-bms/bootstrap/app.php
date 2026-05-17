@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,
-            \App\Http\Middleware\LogActivity::class,
+            \App\Core\AuditLog\Middleware\LogActivity::class,
         ]);
         $middleware->alias([
             'can.permission' => \App\Core\Permissions\Middleware\CheckPermission::class,

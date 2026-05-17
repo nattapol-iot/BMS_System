@@ -4,7 +4,7 @@ namespace App\Core\Auth\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\ActivityLog;
+use App\Core\AuditLog\Models\ActivityLog;
 
 class LoginController extends Controller
 {

@@ -1,9 +1,9 @@
 <?php
-namespace App\Http\Middleware;
+namespace App\Core\AuditLog\Middleware;
 
+use App\Core\AuditLog\Models\ActivityLog;
 use Closure;
 use Illuminate\Http\Request;
-use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
 
 class LogActivity

@@ -7,6 +7,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Core\Permissions\Models\Role;
+use App\Core\AuditLog\Models\ActivityLog;
 
 class User extends Authenticatable
 {

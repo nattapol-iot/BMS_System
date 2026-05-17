@@ -11,8 +11,8 @@ use App\Http\Controllers\EnergyController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\SettingController;
-use App\Http\Controllers\LogController;
+use App\Core\Settings\Controllers\SettingController;
+use App\Core\AuditLog\Controllers\LogController;
 use App\Http\Controllers\BackupController;
 
 Route::get('/', fn() => redirect()->route('login'));

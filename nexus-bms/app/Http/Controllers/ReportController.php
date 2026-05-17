@@ -7,7 +7,7 @@ use App\Models\Equipment;
 use App\Models\Alarm;
 use App\Models\EnergyLog;
 use App\Models\EnergyMeter;
-use App\Models\ActivityLog;
+use App\Core\AuditLog\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;

@@ -3,7 +3,7 @@ namespace App\Console\Commands;
 
 use App\Models\Schedule;
 use App\Models\ScheduleRun;
-use App\Models\ActivityLog;
+use App\Core\AuditLog\Models\ActivityLog;
 use Illuminate\Console\Command;
 use Carbon\Carbon;
 

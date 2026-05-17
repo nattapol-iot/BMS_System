@@ -2,7 +2,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\SystemSetting;
+use App\Core\Settings\Models\SystemSetting;
 
 class SystemSettingSeeder extends Seeder
 {

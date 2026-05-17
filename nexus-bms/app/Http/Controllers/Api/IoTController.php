@@ -7,8 +7,8 @@ use App\Models\EquipmentStatusLog;
 use App\Models\EnergyMeter;
 use App\Models\EnergyLog;
 use App\Models\Alarm;
-use App\Models\ActivityLog;
-use App\Services\NotificationService;
+use App\Core\AuditLog\Models\ActivityLog;
+use App\Core\Notifications\NotificationService;
 use Illuminate\Http\Request;
 
 class IoTController extends Controller

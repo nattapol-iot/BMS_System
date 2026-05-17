@@ -36,6 +36,14 @@ class CoreServiceProvider extends ServiceProvider
             \App\Core\Permissions\Models\Permission::class       => 'App\\Models\\Permission',
             \App\Core\Permissions\Middleware\CheckPermission::class => 'App\\Http\\Middleware\\CheckPermission',
             \App\Core\Auth\Controllers\LoginController::class    => 'App\\Http\\Controllers\\Auth\\LoginController',
+
+            // Phase 3.2 — AuditLog + Notifications + Settings
+            \App\Core\AuditLog\Models\ActivityLog::class         => 'App\\Models\\ActivityLog',
+            \App\Core\AuditLog\Middleware\LogActivity::class     => 'App\\Http\\Middleware\\LogActivity',
+            \App\Core\AuditLog\Controllers\LogController::class  => 'App\\Http\\Controllers\\LogController',
+            \App\Core\Notifications\NotificationService::class   => 'App\\Services\\NotificationService',
+            \App\Core\Settings\Models\SystemSetting::class       => 'App\\Models\\SystemSetting',
+            \App\Core\Settings\Controllers\SettingController::class => 'App\\Http\\Controllers\\SettingController',
         ];
 
         foreach ($aliases as $real => $alias) {

@@ -1,5 +1,5 @@
 <?php
-namespace App\Models;
+namespace App\Core\Settings\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;

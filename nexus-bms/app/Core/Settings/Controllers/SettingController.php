@@ -1,8 +1,9 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Core\Settings\Controllers;
 
-use App\Models\SystemSetting;
+use App\Core\Settings\Models\SystemSetting;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 class SettingController extends Controller
