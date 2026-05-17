@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\LogActivity::class,
         ]);
         $middleware->alias([
-            'can.permission' => \App\Http\Middleware\CheckPermission::class,
+            'can.permission' => \App\Core\Permissions\Middleware\CheckPermission::class,
             'iot.token' => \App\Http\Middleware\VerifyApiToken::class,
         ]);
     })

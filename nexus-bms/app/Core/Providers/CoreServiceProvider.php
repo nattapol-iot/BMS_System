@@ -18,6 +18,31 @@ class CoreServiceProvider extends ServiceProvider
         // Singleton ThemeManager; bind both string key and class name
         $this->app->singleton('theme', fn() => new ThemeManager());
         $this->app->alias('theme', ThemeManager::class);
+
+        // Backward-compat class aliases for files that moved to app/Core/.
+        // Lets old fully-qualified names keep resolving until Phase 10 cleanup.
+        $this->registerBackwardCompatAliases();
+    }
+
+    /**
+     * Map old class names → new Core namespace.
+     * Each entry: $oldFqcn => $newFqcn.
+     */
+    protected function registerBackwardCompatAliases(): void
+    {
+        $aliases = [
+            // Phase 3.1 — Auth + Permissions
+            \App\Core\Permissions\Models\Role::class             => 'App\\Models\\Role',
+            \App\Core\Permissions\Models\Permission::class       => 'App\\Models\\Permission',
+            \App\Core\Permissions\Middleware\CheckPermission::class => 'App\\Http\\Middleware\\CheckPermission',
+            \App\Core\Auth\Controllers\LoginController::class    => 'App\\Http\\Controllers\\Auth\\LoginController',
+        ];
+
+        foreach ($aliases as $real => $alias) {
+            if (!class_exists($alias, false)) {
+                class_alias($real, $alias);
+            }
+        }
     }
 
     public function boot(): void
