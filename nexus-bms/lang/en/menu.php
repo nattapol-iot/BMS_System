@@ -204,4 +204,10 @@ return [
     'forecast_next_month' => 'Forecast next month',
     'hourly_today' => "Today's Hourly Usage",
     'energy_trend_30d' => '30-Day Energy Trend',
+    'energy_rates' => 'Energy Rates',
+    'electricity_rate' => 'Electricity Rate',
+    'water_rate' => 'Water Rate',
+    'solar_feedin' => 'Solar Feed-in Rate',
+    'currency' => 'Currency Code',
+    'currency_symbol' => 'Currency Symbol',
 ];

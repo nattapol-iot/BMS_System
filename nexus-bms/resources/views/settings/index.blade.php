@@ -57,6 +57,12 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link nx-chip" id="tab-energy" data-bs-toggle="pill" data-bs-target="#pane-energy" type="button" role="tab">
+                <i class="fa-solid fa-bolt me-1"></i>
+                {{ __('menu.energy_rates') ?? 'Energy Rates' }}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link nx-chip" id="tab-backup" data-bs-toggle="pill" data-bs-target="#pane-backup" type="button" role="tab">
                 <i class="fa-solid fa-database me-1"></i>
                 {{ __('menu.backup') ?? 'Backup' }}
@@ -357,6 +363,88 @@
                                 {{ __('menu.save_settings') ?? 'Save Settings' }}
                             </button>
                         </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ====== TAB: ENERGY RATES ====== --}}
+        <div class="tab-pane fade" id="pane-energy" role="tabpanel">
+            <div class="nx-card">
+                <div class="nx-card-header">
+                    <span><i class="fa-solid fa-bolt me-2" style="color:#f59e0b"></i>{{ __('menu.energy_rates') ?? 'Energy Rates &amp; Currency' }}</span>
+                    @hasPermission('settings', 'edit')
+                        <span class="nx-badge" style="background:rgba(16,185,129,0.15);color:#10b981;"><i class="fa-solid fa-pen me-1"></i>Editable</span>
+                    @else
+                        <span class="nx-badge" style="background:rgba(107,114,128,0.15);color:#9ca3af;"><i class="fa-solid fa-lock me-1"></i>Read-only (need settings.edit)</span>
+                    @endhasPermission
+                </div>
+                <div class="nx-card-body">
+                    <form action="{{ route('settings.update') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="tab" value="energy">
+                        @php $canEdit = auth()->user()?->hasPermission('settings','edit'); @endphp
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label text-white-50 small">{{ __('menu.electricity_rate') ?? 'Electricity Rate' }}</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0" name="electricity_rate"
+                                           value="{{ $settings['electricity_rate'] ?? '4.50' }}"
+                                           class="form-control" {{ $canEdit ? '' : 'disabled' }}>
+                                    <span class="input-group-text">{{ $settings['currency'] ?? 'THB' }} / kWh</span>
+                                </div>
+                                <small class="text-muted">Used to compute electricity cost on the Energy page.</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label text-white-50 small">{{ __('menu.water_rate') ?? 'Water Rate' }}</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0" name="water_rate"
+                                           value="{{ $settings['water_rate'] ?? '25.00' }}"
+                                           class="form-control" {{ $canEdit ? '' : 'disabled' }}>
+                                    <span class="input-group-text">{{ $settings['currency'] ?? 'THB' }} / m³</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label text-white-50 small">{{ __('menu.solar_feedin') ?? 'Solar Feed-in Rate' }}</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0" name="solar_feedin_rate"
+                                           value="{{ $settings['solar_feedin_rate'] ?? '2.20' }}"
+                                           class="form-control" {{ $canEdit ? '' : 'disabled' }}>
+                                    <span class="input-group-text">{{ $settings['currency'] ?? 'THB' }} / kWh</span>
+                                </div>
+                                <small class="text-muted">Credit per kWh exported from solar to grid.</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label text-white-50 small">{{ __('menu.currency') ?? 'Currency Code' }}</label>
+                                <input type="text" maxlength="3" name="currency"
+                                       value="{{ $settings['currency'] ?? 'THB' }}"
+                                       class="form-control text-uppercase" {{ $canEdit ? '' : 'disabled' }}>
+                                <small class="text-muted">ISO 4217 (e.g. THB, USD, EUR)</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label text-white-50 small">{{ __('menu.currency_symbol') ?? 'Currency Symbol' }}</label>
+                                <input type="text" maxlength="4" name="currency_symbol"
+                                       value="{{ $settings['currency_symbol'] ?? '฿' }}"
+                                       class="form-control" {{ $canEdit ? '' : 'disabled' }}>
+                            </div>
+                        </div>
+
+                        @if($canEdit)
+                            <div class="d-flex justify-content-end mt-4 pt-3 border-top" style="border-color:rgba(255,255,255,0.06)!important;">
+                                <button type="submit" class="nx-btn nx-btn-primary">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i>{{ __('menu.save_settings') ?? 'Save Rates' }}
+                                </button>
+                            </div>
+                        @else
+                            <div class="mt-3 text-muted small">
+                                <i class="fa-solid fa-circle-info me-1"></i>Only users with the <code>settings.edit</code> permission (admin / manager) can change these values.
+                            </div>
+                        @endif
                     </form>
                 </div>
             </div>

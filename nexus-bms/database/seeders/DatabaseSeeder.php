@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             EquipmentSeeder::class,
             AlarmSeeder::class,
             EnergySeeder::class,
+            AdvancedMeterSeeder::class,
             ScheduleSeeder::class,
             SystemSettingSeeder::class,
         ]);

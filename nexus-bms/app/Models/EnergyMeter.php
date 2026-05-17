@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class EnergyMeter extends Model
 {
-    protected $fillable = ['code','name','building_id','floor_id','type','unit'];
+    protected $fillable = ['code','name','building_id','floor_id','equipment_id','type','unit','status'];
     public function building(): BelongsTo { return $this->belongsTo(Building::class); }
     public function floor(): BelongsTo { return $this->belongsTo(Floor::class); }
+    public function equipment(): BelongsTo { return $this->belongsTo(Equipment::class); }
     public function logs(): HasMany { return $this->hasMany(EnergyLog::class, 'meter_id'); }
 }

@@ -204,4 +204,10 @@ return [
     'forecast_next_month' => 'พยากรณ์เดือนหน้า',
     'hourly_today' => 'การใช้รายชั่วโมงวันนี้',
     'energy_trend_30d' => 'แนวโน้มพลังงาน 30 วัน',
+    'energy_rates' => 'อัตราค่าพลังงาน',
+    'electricity_rate' => 'อัตราค่าไฟฟ้า',
+    'water_rate' => 'อัตราค่าน้ำ',
+    'solar_feedin' => 'อัตราขายไฟโซลาร์คืน',
+    'currency' => 'รหัสสกุลเงิน',
+    'currency_symbol' => 'สัญลักษณ์สกุลเงิน',
 ];
