@@ -41,6 +41,60 @@ class ScheduleController extends Controller
         return view('schedules.calendar', compact('schedules','month','year','buildings'));
     }
 
+    public function saveDeviceSettings(Request $request, Schedule $schedule)
+    {
+        $payload = $request->validate([
+            'devices' => 'sometimes|array',
+            'devices.*.on_time' => 'nullable|date_format:H:i',
+            'devices.*.off_time' => 'nullable|date_format:H:i',
+            'devices.*.days' => 'sometimes|array',
+            'devices.*.days.*' => 'integer|between:0,6',
+            'devices.*._remove' => 'sometimes|in:0,1',
+        ]);
+
+        foreach ($payload['devices'] ?? [] as $devId => $fields) {
+            $sd = \App\Models\ScheduleDevice::where('id', $devId)
+                ->where('schedule_id', $schedule->id)
+                ->first();
+            if (!$sd) continue;
+
+            if (!empty($fields['_remove']) && $fields['_remove'] === '1') {
+                $sd->delete();
+                continue;
+            }
+
+            $sd->update([
+                'on_time' => $fields['on_time'] ?? null,
+                'off_time' => $fields['off_time'] ?? null,
+                'days' => $fields['days'] ?? null,
+            ]);
+        }
+
+        // Optional: attach new equipment from the modal
+        if ($request->filled('add_equipment_id')) {
+            \App\Models\ScheduleDevice::firstOrCreate([
+                'schedule_id' => $schedule->id,
+                'equipment_id' => (int) $request->add_equipment_id,
+            ]);
+        }
+
+        return redirect()->route('schedules.device-settings', ['schedule_id' => $schedule->id])
+            ->with('success', 'Device settings saved.');
+    }
+
+    public function addDevice(Request $request, Schedule $schedule)
+    {
+        $data = $request->validate([
+            'equipment_id' => 'required|exists:equipment,id',
+        ]);
+        \App\Models\ScheduleDevice::firstOrCreate([
+            'schedule_id' => $schedule->id,
+            'equipment_id' => $data['equipment_id'],
+        ]);
+        return redirect()->route('schedules.device-settings', ['schedule_id' => $schedule->id])
+            ->with('success', 'Device added.');
+    }
+
     public function deviceSettings(Request $request)
     {
         $buildings = Building::where('status','active')->get();

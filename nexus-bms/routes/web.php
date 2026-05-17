@@ -103,6 +103,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/schedules/{schedule}/edit', [ScheduleController::class, 'edit'])->name('schedules.edit');
         Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
         Route::patch('/schedules/{schedule}/toggle', [ScheduleController::class, 'toggle'])->name('schedules.toggle');
+        Route::put('/schedules/{schedule}/device-settings', [ScheduleController::class, 'saveDeviceSettings'])->name('schedules.device-settings.save');
+        Route::post('/schedules/{schedule}/devices', [ScheduleController::class, 'addDevice'])->name('schedules.device-settings.add');
     });
     Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])
         ->middleware('can.permission:schedules,delete')->name('schedules.destroy');

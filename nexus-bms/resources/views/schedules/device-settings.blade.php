@@ -78,9 +78,9 @@
                                         {{ $s->name }}
                                     </div>
                                     <div style="font-size:.72rem;color:#6b7280;">
-                                        {{ \Carbon\Carbon::parse($s->start_time)->format('H:i') }}
+                                        {{ \Carbon\Carbon::parse($s->turn_on_time)->format('H:i') }}
                                         –
-                                        {{ \Carbon\Carbon::parse($s->end_time)->format('H:i') }}
+                                        {{ \Carbon\Carbon::parse($s->turn_off_time)->format('H:i') }}
                                     </div>
                                 </div>
                                 @if($s->is_active)
@@ -110,8 +110,8 @@
                         <i class="fa-solid fa-microchip me-2" style="color:var(--nx-cyan)"></i>
                         {{ $selectedSchedule->name }}
                         <span class="text-muted small ms-2">
-                            — {{ \Carbon\Carbon::parse($selectedSchedule->start_time)->format('H:i') }}
-                            to {{ \Carbon\Carbon::parse($selectedSchedule->end_time)->format('H:i') }}
+                            — {{ \Carbon\Carbon::parse($selectedSchedule->turn_on_time)->format('H:i') }}
+                            to {{ \Carbon\Carbon::parse($selectedSchedule->turn_off_time)->format('H:i') }}
                         </span>
                     </span>
                     <button type="button" class="nx-btn nx-btn-primary" data-bs-toggle="modal" data-bs-target="#addDeviceModal"

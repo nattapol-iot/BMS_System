@@ -54,30 +54,41 @@
         $isCurrentMonth = ($today->month == $month && $today->year == $year);
         $todayDay     = $isCurrentMonth ? (int)$today->day : -1;
 
-        // Color mapping
+        // Color mapping — keyed by lowercased category
         $typeColors = [
             'hvac'           => '#1d4ed8',
             'lighting'       => '#f59e0b',
+            'access control' => '#10b981',
             'access_control' => '#10b981',
+            'maintenance'    => '#ef4444',
+            'security'       => '#a855f7',
             'general'        => '#6b7280',
         ];
 
-        // Day-of-week name mapping (Carbon: 0=Sun, 6=Sat)
-        $dowAbbr = [0=>'Sun',1=>'Mon',2=>'Tue',3=>'Wed',4=>'Thu',5=>'Fri',6=>'Sat'];
+        // Day-of-week mapping (Carbon: 0=Sun, 6=Sat) — DB stores lowercase short
+        $dowLower = [0=>'sun',1=>'mon',2=>'tue',3=>'wed',4=>'thu',5=>'fri',6=>'sat'];
+        $dowUpper = [0=>'Sun',1=>'Mon',2=>'Tue',3=>'Wed',4=>'Thu',5=>'Fri',6=>'Sat'];
 
         // Build a map: day_number => [schedules active on that day]
-        // For each day, compute its day-of-week and check if repeat_days contains it
         $calendarMap = [];
         for ($d = 1; $d <= $daysInMonth; $d++) {
             $date = \Carbon\Carbon::create($year, $month, $d);
-            $dow  = (int) $date->dayOfWeek; // 0=Sun
+            $dow  = (int) $date->dayOfWeek;
             $calendarMap[$d] = [];
             foreach ($schedules as $s) {
                 $repeatDays = is_array($s->repeat_days)
                     ? $s->repeat_days
                     : json_decode($s->repeat_days ?? '[]', true);
-                // Support numeric (0-6) or string abbr ('Sun','Mon',...)
-                if (in_array($dow, $repeatDays) || in_array($dowAbbr[$dow], $repeatDays)) {
+                if (!is_array($repeatDays)) continue;
+
+                // Date-range gating
+                if ($s->start_date && $s->start_date->isAfter($date)) continue;
+                if ($s->end_date && $s->end_date->isBefore($date)) continue;
+
+                // Match lowercase / capitalized / numeric
+                if (in_array($dowLower[$dow], $repeatDays)
+                    || in_array($dowUpper[$dow], $repeatDays)
+                    || in_array($dow, $repeatDays, true)) {
                     $calendarMap[$d][] = $s;
                 }
             }
@@ -146,7 +157,12 @@
                                     {{ $dayNum }}
                                 </div>
                                 @foreach(array_slice($calendarMap[$dayNum] ?? [], 0, 3) as $sched)
-                                    @php $sc = $typeColors[$sched->schedule_type] ?? '#6b7280'; @endphp
+                                    @php
+                                        $sc = $typeColors[strtolower($sched->category ?? 'general')] ?? '#6b7280';
+                                        $onT = $sched->turn_on_time ? \Carbon\Carbon::parse($sched->turn_on_time)->format('H:i') : '';
+                                        $offT = $sched->turn_off_time ? \Carbon\Carbon::parse($sched->turn_off_time)->format('H:i') : '';
+                                        $timeLabel = $onT && $offT ? "{$onT}–{$offT}" : ($onT ?: 'all day');
+                                    @endphp
                                     <div style="
                                         background:{{ $sc }}22;
                                         border-left:3px solid {{ $sc }};
@@ -159,8 +175,8 @@
                                         overflow:hidden;
                                         text-overflow:ellipsis;
                                         max-width:100%;
-                                    " title="{{ $sched->name }} ({{ \Carbon\Carbon::parse($sched->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($sched->end_time)->format('H:i') }})">
-                                        {{ Str::limit($sched->name, 14) }}
+                                    " title="{{ $sched->name }} ({{ $timeLabel }})">
+                                        <span style="font-weight:600;">{{ $onT }}</span> {{ Str::limit($sched->name, 12) }}
                                     </div>
                                 @endforeach
                                 @php $extra = count($calendarMap[$dayNum] ?? []) - 3; @endphp
@@ -185,17 +201,17 @@
         <div class="nx-card-body">
             <div class="d-flex flex-wrap gap-3">
                 @foreach([
-                    ['hvac', 'HVAC', '#1d4ed8', 'fa-wind'],
-                    ['lighting', 'Lighting', '#f59e0b', 'fa-lightbulb'],
-                    ['access_control', 'Access Control', '#10b981', 'fa-door-open'],
-                    ['general', 'General', '#6b7280', 'fa-gear'],
-                ] as [$type, $label, $color, $icon])
+                    ['HVAC', 'HVAC', '#1d4ed8', 'fa-wind'],
+                    ['Lighting', 'Lighting', '#f59e0b', 'fa-lightbulb'],
+                    ['Access Control', 'Access Control', '#10b981', 'fa-door-open'],
+                    ['Maintenance', 'Maintenance', '#ef4444', 'fa-screwdriver-wrench'],
+                ] as [$cat, $label, $color, $icon])
                 <div class="d-flex align-items-center gap-2">
                     <div style="width:14px;height:14px;background:{{ $color }};border-radius:3px;"></div>
                     <i class="fa-solid {{ $icon }}" style="color:{{ $color }};font-size:.85rem;"></i>
                     <span class="text-muted small">{{ $label }}</span>
                     <span class="nx-badge" style="background:{{ $color }}22;color:{{ $color }};">
-                        {{ $schedules->where('schedule_type', $type)->count() }}
+                        {{ $schedules->where('category', $cat)->count() }}
                     </span>
                 </div>
                 @endforeach
